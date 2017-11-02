@@ -1,20 +1,20 @@
 # Copyright (C) 2017 Chi-kwan Chan
-# Copyright (C) 2017 Steward Observatory
+# Copyright (C) 2017 Harvard-Smithsonian Center for Astrophysics
 #
-# This file is part of mockservation.
+# This file is part of interview.
 #
-# Mockservation is free software: you can redistribute it and/or
+# Interview is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, either version 3 of the
 # License, or (at your option) any later version.
 #
-# Mockservation is distributed in the hope that it will be useful, but
+# Interview is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with mockservation.  If not, see <http://www.gnu.org/licenses/>.
+# along with interview.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import inspect
@@ -40,8 +40,8 @@ def open(name, **kwargs):
         NameError:    Invalid data file/bundle name
 
     Examples:
-        >>> import mockservation as mock
-        >>> handle = mock.open("data_file.raw")
+        >>> import interview as iv
+        >>> handle = iv.open("data_file.raw")
     """
     if os.path.isdir(name):
         open_x = open_bundle # open_bundle() have been implemented; see below
@@ -72,14 +72,14 @@ def open_bundle(name, **kwargs):
         ImportError:    Data bundle does not provide a loader
 
     Examples:
-        >>> import mockservation as mock
-        >>> handle = mock.open_bundle("data_bundle")
+        >>> import interview as iv
+        >>> handle = iv.open_bundle("data_bundle")
     """
     abcname = fullname(Bundle)
 
     for loader_name in ["loader.py",
                         ".loader.py",
-                        ".mockservation/loader.py"]:
+                        ".interview/loader.py"]:
         full_name = "{}/{}".format(name, loader_name)
         if os.path.isfile(full_name):
             import importlib.util as iu
