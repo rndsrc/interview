@@ -16,5 +16,26 @@
 # You should have received a copy of the GNU General Public License
 # along with interview.  If not, see <http://www.gnu.org/licenses/>.
 
-from . import io
-from . import widget
+def Tabs(obj):
+    """Convert a nested (ordered) dictionary to a Bokeh tabs widget
+
+    Args:
+        obj: a nested (ordered) dictionary where the keys are tab
+            titles and the values are children of panels
+
+    Examples:
+        >>> import bokeh.plotting as bp
+        >>> import interview as iv
+        >>> fig = bp.figure()
+        >>> bp.show(iv.widget.Tabs({'title':fig}))
+    """
+    import bokeh.plotting       as bp
+    import bokeh.models.widgets as bw
+
+    if   isinstance(obj, bp.Figure):
+        return obj
+    elif isinstance(obj, dict):
+        return bw.Tabs(tabs=[bw.Panel(child=Tabs(v), title=k)
+                             for k, v in obj.items()])
+    else:
+        raise ValueError("Input must be a dictionary or a Bokeh figure")
