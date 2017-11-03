@@ -83,14 +83,39 @@ plt = fig.circle(x="datetime", y="resid_phas", color="color",
 # Map pandas column names to selection box options; create selection
 # boxes for the x- and y-axes
 opts = {
-    "datetime"   : "Time",
-    "gmst"       : "GMST",
-    "r"          : "r",
-    "u"          : "u",
-    "v"          : "v",
-    "amp"        : "Amplitude",
-    "resid_phas" : "Phase",
-    "snr"        : "Signal-to-Noise Ratio",
+    "datetime"     : "Time",
+    "gmst"         : "GMST",
+
+    "r"            : "r",
+    "u"            : "u",
+    "v"            : "v",
+    "ref_elev"     : "Reference (Site 1) Elevation",
+    "rem_elev"     : "Remainder (Site 2) Elevation",
+    "ref_az"       : "Reference (Site 1) Azimuth",
+    "rem_az"       : "Remainder (Site 2) Azimuth",
+
+    "amp"          : "Amplitude",
+    "resid_phas"   : "Residual Phase",
+    "total_phas"   : "Total Phase",
+    "snr"          : "Signal-to-Noise Ratio",
+    "quality"      : "Quality",
+
+    "delay_rate"   : "Delay Rate",
+    "total_rate"   : "Total Delay Rate",
+    "sbdelay"      : "Single-Band Delay",
+    "resid_delay"  : "Single-Band Residual Delay",
+    "total_sbresid": "Total Single-Band Residual Delay",
+    "mbdelay"      : "Multi-Band Delay",
+    "total_mbdelay": "Total Multi-Band Delay",
+    "ambiguity"    : "Ambiguity",
+
+    # Unused columns:
+    # "baseline", "datatype", "dec_deg", "duration", "epoch", "esdesp",
+    # "expt_no", "extent_no", "freq_code", "lags", "length",
+    # "noloss_cotime", "offset", "phase_snr", "polarization", "procdate",
+    # "ra_hrs", "ref_freq", "root_id", "scan_id", "scan_offset", "site1",
+    # "site2" "source", "srch_cotime", "timetag", "two", "version",
+    # "year",
 }
 select_x = iw.Select(plt, 'x', opts)
 select_y = iw.Select(plt, 'y', opts)
