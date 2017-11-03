@@ -16,16 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with interview.  If not, see <http://www.gnu.org/licenses/>.
 
-def Select(p, a, opts):
-    """Create a selector with its callback
-
-for plot "p" with glyph attribute "a"
+def Select(p, a, opts, backend="python"):
+    """Create a selector with callback for plot "p" with glyph attribute "a"
 
     Args:
-        p:    plot
-        a:    glyph attribute
-        opts: a dictionary where the keys are data source columns and
+        p:       plot
+        a:       glyph attribute
+        opts:    a dictionary where the keys are data source columns and
             values are selector labels.
+        backend: choose callback backend; the only supported backend is
+            "python"
 
     Returns:
         An instance of Bokeh Select
@@ -42,8 +42,12 @@ for plot "p" with glyph attribute "a"
                   options=list(opts.values()),
                   value  =opts[getattr(p.glyph, a)])
 
-    def callback(attr, old, new):
-        setattr(p.glyph, a,
-                list(opts.keys())[list(opts.values()).index(new)])
-    s.on_change("value", callback)
+    if backend == "python":
+        def callback(attr, old, new):
+            setattr(p.glyph, a,
+                    list(opts.keys())[list(opts.values()).index(new)])
+        s.on_change("value", callback)
+    else:
+        raise ValueError('the only supported backend is "python"')
+
     return s
