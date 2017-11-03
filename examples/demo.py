@@ -8,8 +8,10 @@
 import sys
 import numpy as np
 
-import bokeh.models   as bm
-import bokeh.plotting as bp
+import bokeh.layouts        as bl
+import bokeh.models         as bm
+import bokeh.models.widgets as bw
+import bokeh.plotting       as bp
 
 from eat.io import hops, util
 
@@ -53,6 +55,23 @@ fig = bp.figure(title="Scatter plot",
                 output_backend="webgl")
 plt = fig.circle(x="datetime", y="phase", source=src, size=5)
 
+# List polarization and create a selection box for it; define a call
+# back and connect it with the selection box
+pols       = ["All"] + sorted(df.pol.unique(), reverse=True)
+select_pol = bw.Select(title="Polarization", options=pols,  value=pols[0])
+
+def update():
+    pol = select_pol.value
+    src.data = src.from_df(df if pol == "All" else df[df.pol == pol])
+select_pol.on_change("value", lambda attr, old, new: update())
+
+update() # update once to populate the bokeh column data source
+
+# Layout widgets;
+controls = [select_pol]
+inputs   = bl.widgetbox(*controls, sizing_mode="fixed")
+scatter  = bl.row(fig, inputs)
+
 # Add everything to the root
-bp.curdoc().add_root(fig)
+bp.curdoc().add_root(scatter)
 bp.curdoc().title = "Demo"
