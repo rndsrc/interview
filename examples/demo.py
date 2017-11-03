@@ -93,5 +93,5 @@ inputs   = bl.widgetbox(*controls, sizing_mode="fixed")
 scatter  = bl.row(fig, inputs)
 
 # Add everything to the root
-bp.curdoc().add_root(scatter)
+bp.curdoc().add_root(iw.Tabs({"Scatter Plot":scatter}))
 bp.curdoc().title = "Demo"
