@@ -39,6 +39,7 @@ df["color"] = ["red" if df.site1[i] == "A" or df.site2[i] == "A" else "green"
 df.color[df.site1 == df.site2] = "blue"
 
 util.add_path(df)
+util.add_gmst(df)
 
 # Create empty Bokeh column data source with column names matching the
 # pandas data frmae
@@ -83,6 +84,7 @@ plt = fig.circle(x="datetime", y="resid_phas", color="color",
 # boxes for the x- and y-axes
 opts = {
     "datetime"   : "Time",
+    "gmst"       : "GMST",
     "r"          : "r",
     "u"          : "u",
     "v"          : "v",
