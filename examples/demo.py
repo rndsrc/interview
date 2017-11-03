@@ -17,6 +17,8 @@ import interview.widget as iw
 
 from eat.io import hops, util
 
+#------------------------------------------------------------------------------
+# Get a list of files from the arguments
 if len(sys.argv) > 1:
     files = sys.argv[1:]
 else:
@@ -24,6 +26,7 @@ else:
 
 print('Inspecting file{} "{}"'.format('s' if len(files) > 1 else '', files))
 
+#------------------------------------------------------------------------------
 # Read an alist file; rename columns; add new columns
 df = hops.read_alist(files[0])
 
@@ -37,6 +40,12 @@ df.color[df.site1 == df.site2] = "blue"
 
 util.add_path(df)
 
+# Create empty Bokeh column data source with column names matching the
+# pandas data frmae
+print(df.columns)
+src = bm.ColumnDataSource(data={k:[] for k in df.columns})
+
+#------------------------------------------------------------------------------
 # Create hover tool with some useful information; use it for a Bokeh
 # figure; create a scatter plot
 hover = bm.HoverTool(tooltips=[
@@ -46,23 +55,11 @@ hover = bm.HoverTool(tooltips=[
     ("Path",         "@path"),
 ])
 
-# Create empty Bokeh column data source with column names matching the
-# pandas data frmae
-print(df.columns)
-src = bm.ColumnDataSource(data={k:[] for k in df.columns})
-
-# Scatter plot
-fig = bp.figure(title="Scatter plot",
-                plot_height=720, plot_width=720,
-                toolbar_location="above", tools=[hover,
-                "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
-                output_backend="webgl")
-plt = fig.circle(x="datetime", y="resid_phas", color="color", source=src, size=5)
-
+#------------------------------------------------------------------------------
 # List polarization and create a selection box for it; define a call
 # back and connect it with the selection box
 pols       = ["All"] + sorted(df.polarization.unique(), reverse=True)
-select_pol = bw.Select(title="Polarization", options=pols,  value=pols[0])
+select_pol = bw.Select(title="Polarization", options=pols, value=pols[0])
 
 def update():
     pol = select_pol.value
@@ -70,6 +67,30 @@ def update():
 select_pol.on_change("value", lambda attr, old, new: update())
 
 update() # update once to populate the bokeh column data source
+
+#------------------------------------------------------------------------------
+# Time series
+fig = bp.figure(title="Time series",
+                plot_height=360, plot_width=1024,
+                x_axis_type='datetime',
+                toolbar_location="above", tools=[hover,
+                "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+                output_backend="webgl")
+plt = fig.circle(x="datetime", y="resid_phas", color="color", source=src, size=5)
+
+# Layout widgets;
+controls    = [select_pol]
+inputs      = bl.widgetbox(*controls)#, sizing_mode="fixed")
+time_series = bl.column(fig, inputs)
+
+#------------------------------------------------------------------------------
+# Scatter plot
+fig = bp.figure(title="Scatter plot",
+                plot_height=720, plot_width=720,
+                toolbar_location="above", tools=[hover,
+                "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+                output_backend="webgl")
+plt = fig.circle(x="datetime", y="resid_phas", color="color", source=src, size=5)
 
 # Map pandas column names to selection box options; create selection
 # boxes for the x- and y-axes
@@ -86,10 +107,11 @@ select_x = iw.Select(plt, 'x', opts)
 select_y = iw.Select(plt, 'y', opts)
 
 # Layout widgets;
-controls = [select_pol, select_x, select_y]
+controls = [select_x, select_y] # [select_pol, select_x, select_y]
 inputs   = bl.widgetbox(*controls, sizing_mode="fixed")
 scatter  = bl.row(fig, inputs)
 
+#------------------------------------------------------------------------------
 # Add everything to the root
 bp.curdoc().add_root(iw.Tabs({"Time Series":time_series,
                               "Scatter Plot":scatter}))
