@@ -41,7 +41,9 @@ for plot "p" with glyph attribute "a"
     s = bw.Select(title  =a.upper()+" Axis",
                   options=list(opts.values()),
                   value  =opts[getattr(p.glyph, a)])
-    s.on_change("value", lambda attr, old, new:
-                setattr(p.glyph, a,
-                        list(opts.keys())[list(opts.values()).index(new)]))
+
+    def callback(attr, old, new):
+        setattr(p.glyph, a,
+                list(opts.keys())[list(opts.values()).index(new)])
+    s.on_change("value", callback)
     return s
