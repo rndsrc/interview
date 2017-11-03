@@ -23,6 +23,9 @@ def Tabs(obj):
         obj: a nested (ordered) dictionary where the keys are tab
             titles and the values are children of panels
 
+    Returns:
+        An instance of Bokeh Tabs
+
     Examples:
         >>> import bokeh.plotting as bp
         >>> import interview as iv
