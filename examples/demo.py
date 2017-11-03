@@ -6,7 +6,8 @@
 # where FILE is the file to be opened.
 
 import sys
-import numpy as np
+import pandas as pd
+import numpy  as np
 
 import bokeh.layouts        as bl
 import bokeh.models         as bm
@@ -127,28 +128,40 @@ scatter = bl.row(inputs, fig)
 #------------------------------------------------------------------------------
 # Global controls and layout
 
-checkbutton_auto = bw.CheckboxButtonGroup(labels=["Autocorrelation"],
-                                          active=[])
-
-# List polarization and create a selection box for it; define a call
-# back and connect it with the selection box
-pols       = ["All"] + sorted(df.polarization.unique(), reverse=True)
-select_pol = bw.Select(title="Polarization", options=pols, value=pols[0])
-
+pols      = sorted(df.polarization.unique(), reverse=True)
+last      = [1,2,3,4]
+global_cb = bw.CheckboxButtonGroup(labels=["Auto-correlation"]+pols,
+                                   active=last)
 def update():
-    pol  = select_pol.value
-    auto = len(checkbutton_auto.active) > 0
-    tmp  = df
-    tmp  = tmp if auto         else tmp[tmp.site1 != tmp.site2]
-    tmp  = tmp if pol == "All" else tmp[tmp.polarization == pol]
-    src.data = src.from_df(tmp)
+    global last
+    active = global_cb.active
 
-checkbutton_auto.on_change("active", lambda attr, old, new: update())
-select_pol.on_change("value", lambda attr, old, new: update())
+    if 0 in active:
+        # include auto-correlation
+        df1    = df
+        active = active[1:]
+    else:
+        # no auto-correlation
+        df1    = df[df.site1 != df.site2]
+
+    if len(active) == 0:
+        global_cb.active = global_cb.active + last
+        active += last
+    else:
+        last = active
+
+    df2 = pd.DataFrame()
+    for i in active:
+        pol = pols[i-1]
+        df2 = df2.append(df1[df1.polarization == pol])
+
+    src.data = src.from_df(df2)
+
+global_cb.on_change("active", lambda attr, old, new: update())
 update() # update once to populate the bokeh column data source
 
 # Add everything to the root
-all = bl.column(bl.widgetbox(checkbutton_auto, select_pol),
+all = bl.column(bl.widgetbox(global_cb),
                 iw.Tabs({"Time Series":time_series,
                          "Scatter Plot":scatter}))
 
