@@ -56,19 +56,6 @@ hover = bm.HoverTool(tooltips=[
 ])
 
 #------------------------------------------------------------------------------
-# List polarization and create a selection box for it; define a call
-# back and connect it with the selection box
-pols       = ["All"] + sorted(df.polarization.unique(), reverse=True)
-select_pol = bw.Select(title="Polarization", options=pols, value=pols[0])
-
-def update():
-    pol = select_pol.value
-    src.data = src.from_df(df if pol == "All" else df[df.polarization == pol])
-select_pol.on_change("value", lambda attr, old, new: update())
-
-update() # update once to populate the bokeh column data source
-
-#------------------------------------------------------------------------------
 # Time series
 fig = bp.figure(title="Time series",
                 plot_height=360, plot_width=1024,
@@ -76,7 +63,8 @@ fig = bp.figure(title="Time series",
                 toolbar_location="above", tools=[hover,
                 "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
                 output_backend="webgl")
-plt = fig.circle(x="datetime", y="resid_phas", color="color", source=src, size=5)
+plt = fig.circle(x="datetime", y="resid_phas", color="color",
+                 source=src, size=5)
 
 # Layout widgets;
 time_series = bl.column(fig)
@@ -88,7 +76,8 @@ fig = bp.figure(title="Scatter plot",
                 toolbar_location="above", tools=[hover,
                 "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
                 output_backend="webgl")
-plt = fig.circle(x="datetime", y="resid_phas", color="color", source=src, size=5)
+plt = fig.circle(x="datetime", y="resid_phas", color="color",
+                 source=src, size=5)
 
 # Map pandas column names to selection box options; create selection
 # boxes for the x- and y-axes
@@ -109,9 +98,30 @@ inputs  = bl.widgetbox(select_x, select_y, sizing_mode="fixed")
 scatter = bl.row(inputs, fig)
 
 #------------------------------------------------------------------------------
-# Add everything to the root
+# Global controls and layout
 
-all = bl.column(bl.widgetbox(select_pol),
+checkbutton_auto = bw.CheckboxButtonGroup(labels=["Autocorrelation"],
+                                          active=[])
+
+# List polarization and create a selection box for it; define a call
+# back and connect it with the selection box
+pols       = ["All"] + sorted(df.polarization.unique(), reverse=True)
+select_pol = bw.Select(title="Polarization", options=pols, value=pols[0])
+
+def update():
+    pol  = select_pol.value
+    auto = len(checkbutton_auto.active) > 0
+    tmp  = df
+    tmp  = tmp if auto         else tmp[tmp.site1 != tmp.site2]
+    tmp  = tmp if pol == "All" else tmp[tmp.polarization == pol]
+    src.data = src.from_df(tmp)
+
+checkbutton_auto.on_change("active", lambda attr, old, new: update())
+select_pol.on_change("value", lambda attr, old, new: update())
+update() # update once to populate the bokeh column data source
+
+# Add everything to the root
+all = bl.column(bl.widgetbox(checkbutton_auto, select_pol),
                 iw.Tabs({"Time Series":time_series,
                          "Scatter Plot":scatter}))
 
