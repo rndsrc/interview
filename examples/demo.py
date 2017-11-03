@@ -24,51 +24,49 @@ else:
 
 print('Inspecting file{} "{}"'.format('s' if len(files) > 1 else '', files))
 
-# Read an alist file
+# Read an alist file; rename columns; add new columns
 df = hops.read_alist(files[0])
-df.rename(columns={
-    'polarization': "pol",
-    'ref_freq'    : "freq",
-    'resid_phas'  : "phase",
-}, inplace=True)
 
+df["r"]     = np.sqrt(df.u**2 + df.v**2)
 df['site1'] = df.baseline.str[0]
 df['site2'] = df.baseline.str[1]
-util.add_path(df)
-
-df["r"] = np.sqrt(df.u**2 + df.v**2)
 
 df["color"] = ["red" if df.site1[i] == "A" or df.site2[i] == "A" else "green"
                for i in range(len(df))]
 df.color[df.site1 == df.site2] = "blue"
 
-# Create empty Bokeh column data source with column names matching the
-# pandas data frmae
-src = bm.ColumnDataSource(data={k:[] for k in df.columns})
+util.add_path(df)
 
 # Create hover tool with some useful information; use it for a Bokeh
 # figure; create a scatter plot
 hover = bm.HoverTool(tooltips=[
     ("Baseline",     "@site1 @site2"),
     ("(u,v)",        "(@u, @v)"),
-    ("Polarization", "@pol"),
+    ("Polarization", "@polarization"),
     ("Path",         "@path"),
 ])
+
+# Create empty Bokeh column data source with column names matching the
+# pandas data frmae
+print(df.columns)
+src = bm.ColumnDataSource(data={k:[] for k in df.columns})
+
+# Scatter plot
 fig = bp.figure(title="Scatter plot",
                 plot_height=720, plot_width=720,
                 toolbar_location="above", tools=[hover,
                 "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
                 output_backend="webgl")
-plt = fig.circle(x="datetime", y="phase", color="color", source=src, size=5)
+plt = fig.circle(x="datetime", y="resid_phas", color="color", source=src, size=5)
 
 # List polarization and create a selection box for it; define a call
 # back and connect it with the selection box
-pols       = ["All"] + sorted(df.pol.unique(), reverse=True)
+pols       = ["All"] + sorted(df.polarization.unique(), reverse=True)
 select_pol = bw.Select(title="Polarization", options=pols,  value=pols[0])
 
 def update():
     pol = select_pol.value
-    src.data = src.from_df(df if pol == "All" else df[df.pol == pol])
+    src.data = src.from_df(df if pol == "All" else df[df.polarization == pol])
 select_pol.on_change("value", lambda attr, old, new: update())
 
 update() # update once to populate the bokeh column data source
@@ -76,13 +74,13 @@ update() # update once to populate the bokeh column data source
 # Map pandas column names to selection box options; create selection
 # boxes for the x- and y-axes
 opts = {
-    "datetime": "Time",
-    "r"       : "r",
-    "u"       : "u",
-    "v"       : "v",
-    "amp"     : "Amplitude",
-    "phase"   : "Phase",
-    "snr"     : "Signal-to-Noise Ratio",
+    "datetime"   : "Time",
+    "r"          : "r",
+    "u"          : "u",
+    "v"          : "v",
+    "amp"        : "Amplitude",
+    "resid_phas" : "Phase",
+    "snr"        : "Signal-to-Noise Ratio",
 }
 select_x = iw.Select(plt, 'x', opts)
 select_y = iw.Select(plt, 'y', opts)
@@ -93,5 +91,6 @@ inputs   = bl.widgetbox(*controls, sizing_mode="fixed")
 scatter  = bl.row(fig, inputs)
 
 # Add everything to the root
-bp.curdoc().add_root(iw.Tabs({"Scatter Plot":scatter}))
+bp.curdoc().add_root(iw.Tabs({"Time Series":time_series,
+                              "Scatter Plot":scatter}))
 bp.curdoc().title = "Demo"
