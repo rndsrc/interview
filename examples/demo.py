@@ -13,6 +13,8 @@ import bokeh.models         as bm
 import bokeh.models.widgets as bw
 import bokeh.plotting       as bp
 
+import interview.widget as iw
+
 from eat.io import hops, util
 
 if len(sys.argv) > 1:
@@ -71,8 +73,22 @@ select_pol.on_change("value", lambda attr, old, new: update())
 
 update() # update once to populate the bokeh column data source
 
+# Map pandas column names to selection box options; create selection
+# boxes for the x- and y-axes
+opts = {
+    "datetime": "Time",
+    "r"       : "r",
+    "u"       : "u",
+    "v"       : "v",
+    "amp"     : "Amplitude",
+    "phase"   : "Phase",
+    "snr"     : "Signal-to-Noise Ratio",
+}
+select_x = iw.Select(plt, 'x', opts)
+select_y = iw.Select(plt, 'y', opts)
+
 # Layout widgets;
-controls = [select_pol]
+controls = [select_pol, select_x, select_y]
 inputs   = bl.widgetbox(*controls, sizing_mode="fixed")
 scatter  = bl.row(fig, inputs)
 
