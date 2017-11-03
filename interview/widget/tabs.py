@@ -34,8 +34,9 @@ def Tabs(obj):
     """
     import bokeh.plotting       as bp
     import bokeh.models.widgets as bw
+    import bokeh.models.layouts as bl
 
-    if   isinstance(obj, bp.Figure):
+    if   isinstance(obj, bp.Figure) or isinstance(obj, bl.LayoutDOM):
         return obj
     elif isinstance(obj, dict):
         return bw.Tabs(tabs=[bw.Panel(child=Tabs(v), title=k)
