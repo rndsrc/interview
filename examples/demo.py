@@ -79,9 +79,7 @@ fig = bp.figure(title="Time series",
 plt = fig.circle(x="datetime", y="resid_phas", color="color", source=src, size=5)
 
 # Layout widgets;
-controls    = [select_pol]
-inputs      = bl.widgetbox(*controls)#, sizing_mode="fixed")
-time_series = bl.column(fig, inputs)
+time_series = bl.column(fig)
 
 #------------------------------------------------------------------------------
 # Scatter plot
@@ -107,12 +105,15 @@ select_x = iw.Select(plt, 'x', opts)
 select_y = iw.Select(plt, 'y', opts)
 
 # Layout widgets;
-controls = [select_x, select_y] # [select_pol, select_x, select_y]
-inputs   = bl.widgetbox(*controls, sizing_mode="fixed")
-scatter  = bl.row(fig, inputs)
+inputs  = bl.widgetbox(select_x, select_y, sizing_mode="fixed")
+scatter = bl.row(inputs, fig)
 
 #------------------------------------------------------------------------------
 # Add everything to the root
-bp.curdoc().add_root(iw.Tabs({"Time Series":time_series,
-                              "Scatter Plot":scatter}))
+
+all = bl.column(bl.widgetbox(select_pol),
+                iw.Tabs({"Time Series":time_series,
+                         "Scatter Plot":scatter}))
+
+bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo"
