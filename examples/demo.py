@@ -36,6 +36,10 @@ util.add_path(df)
 
 df["r"] = np.sqrt(df.u**2 + df.v**2)
 
+df["color"] = ["red" if df.site1[i] == "A" or df.site2[i] == "A" else "green"
+               for i in range(len(df))]
+df.color[df.site1 == df.site2] = "blue"
+
 # Create empty Bokeh column data source with column names matching the
 # pandas data frmae
 src = bm.ColumnDataSource(data={k:[] for k in df.columns})
@@ -53,7 +57,7 @@ fig = bp.figure(title="Scatter plot",
                 toolbar_location="above", tools=[hover,
                 "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
                 output_backend="webgl")
-plt = fig.circle(x="datetime", y="phase", source=src, size=5)
+plt = fig.circle(x="datetime", y="phase", color="color", source=src, size=5)
 
 # List polarization and create a selection box for it; define a call
 # back and connect it with the selection box
