@@ -221,7 +221,8 @@ all = bl.column(bl.widgetbox(global_cb),
                 iw.Tabs({"Time Series":           time_series,
                          "Scatter Plot":          scatter,
                          "Horizontal Linked View":hlinked,
-                         "Vertical Linked View":  vlinked}))
+                         "Vertical Linked View":  vlinked},
+                        width=1024))
 
 bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo"

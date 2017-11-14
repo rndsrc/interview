@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with interview.  If not, see <http://www.gnu.org/licenses/>.
 
-def Tabs(obj):
+def Tabs(obj, **kwargs):
     """Convert a nested (ordered) dictionary to a Bokeh tabs widget
 
     Args:
@@ -39,7 +39,7 @@ def Tabs(obj):
     if   isinstance(obj, bp.Figure) or isinstance(obj, bl.LayoutDOM):
         return obj
     elif isinstance(obj, dict):
-        return bw.Tabs(tabs=[bw.Panel(child=Tabs(v), title=k)
-                             for k, v in obj.items()])
+        return bw.Tabs(tabs=[bw.Panel(child=Tabs(v, **kwargs), title=k)
+                             for k, v in obj.items()], **kwargs)
     else:
         raise ValueError("Input must be a dictionary or a Bokeh figure")
