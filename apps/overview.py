@@ -130,7 +130,7 @@ inputs  = bl.widgetbox(select_x, select_y, sizing_mode="fixed")
 scatter = bl.row(inputs, fig)
 
 #------------------------------------------------------------------------------
-# Linked view
+# Horizontal Linked view
 fig1 = bp.figure(plot_height=360, plot_width=360,
                  toolbar_location="above", tools=[hover,
                  "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
@@ -152,8 +152,34 @@ select_x2  = iw.Select(plt2, 'x', opts)
 select_y12 = iw.Select([plt1, plt2], 'y', opts)
 
 # Layout widgets;
-inputs = bl.widgetbox(select_x1, select_x2, select_y12, sizing_mode="fixed")
-linked = bl.row(inputs, fig1, fig2)
+inputs  = bl.widgetbox(select_x1, select_x2, select_y12, sizing_mode="fixed")
+hlinked = bl.row(inputs, fig1, fig2)
+
+#------------------------------------------------------------------------------
+# Veritcal Linked view
+fig1 = bp.figure(plot_height=360, plot_width=360,
+                 toolbar_location="above", tools=[hover,
+                 "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+                 output_backend="webgl")
+plt1 = fig1.circle(x="datetime", y="resid_phas", color="color",
+                   source=src, size=5)
+
+fig2 = bp.figure(plot_height=360, plot_width=360,
+                 x_range=fig1.x_range,
+                 toolbar_location="above", tools=[hover,
+                 "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+                 output_backend="webgl")
+plt2 = fig2.circle(x="datetime", y="resid_phas", color="color",
+                   source=src, size=5)
+
+# Create selection boxes for the x- and y-axes
+select_x12 = iw.Select([plt1, plt2], 'x', opts)
+select_y1  = iw.Select(plt1, 'y', opts)
+select_y2  = iw.Select(plt2, 'y', opts)
+
+# Layout widgets;
+inputs  = bl.widgetbox(select_x12, select_y1, select_y2, sizing_mode="fixed")
+vlinked = bl.row(bl.column(inputs, bl.Spacer()), bl.column(fig1, fig2))
 
 #------------------------------------------------------------------------------
 # Global controls and layout
@@ -192,9 +218,10 @@ update() # update once to populate the bokeh column data source
 
 # Add everything to the root
 all = bl.column(bl.widgetbox(global_cb),
-                iw.Tabs({"Time Series":  time_series,
-                         "Scatter Plot": scatter,
-                         "Linked View":  linked}))
+                iw.Tabs({"Time Series":           time_series,
+                         "Scatter Plot":          scatter,
+                         "Horizontal Linked VIew":hlinked,
+                         "Vertical Linked View":  vlinked}))
 
 bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo"
