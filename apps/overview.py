@@ -131,19 +131,14 @@ scatter = bl.row(inputs, fig)
 
 #------------------------------------------------------------------------------
 # Linked view
-fig1 = bp.figure(title="Scatter plot 1",
-                 plot_height=360, plot_width=360,
+fig1 = bp.figure(plot_height=360, plot_width=360,
                  toolbar_location="above", tools=[hover,
                  "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
                  output_backend="webgl")
 plt1 = fig1.circle(x="datetime", y="resid_phas", color="color",
                    source=src, size=5)
 
-select_x1 = iw.Select(plt1, 'x', opts)
-select_y1 = iw.Select(plt1, 'y', opts)
-
-fig2 = bp.figure(title="Scatter plot 2",
-                 plot_height=360, plot_width=360,
+fig2 = bp.figure(plot_height=360, plot_width=360,
                  y_range=fig1.y_range,
                  toolbar_location="above", tools=[hover,
                  "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
@@ -151,10 +146,13 @@ fig2 = bp.figure(title="Scatter plot 2",
 plt2 = fig2.circle(x="datetime", y="resid_phas", color="color",
                    source=src, size=5)
 
-select_x2 = iw.Select(plt2, 'x', opts)
+# Create selection boxes for the x- and y-axes
+select_x1  = iw.Select(plt1, 'x', opts)
+select_x2  = iw.Select(plt2, 'x', opts)
+select_y12 = iw.Select([plt1, plt2], 'y', opts)
 
 # Layout widgets;
-inputs = bl.widgetbox(select_x1, select_y1, select_x2, sizing_mode="fixed")
+inputs = bl.widgetbox(select_x1, select_x2, select_y12, sizing_mode="fixed")
 linked = bl.row(inputs, fig1, fig2)
 
 #------------------------------------------------------------------------------

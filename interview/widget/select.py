@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with interview.  If not, see <http://www.gnu.org/licenses/>.
 
-def Select(p, a, opts, backend="python"):
-    """Create a selector with callback for plot "p" with glyph attribute "a"
+def Select(ps, a, opts, backend="python"):
+    """Create a selector with callback for plots "ps" with glyph attribute "a"
 
     Args:
-        p:       plot
+        ps:      a list of plots
         a:       glyph attribute
         opts:    a dictionary where the keys are data source columns and
             values are selector labels.
@@ -38,14 +38,18 @@ def Select(p, a, opts, backend="python"):
     """
     import bokeh.models.widgets as bw
 
+    if not isinstance(ps, list):
+        ps = [ps]
+
     s = bw.Select(title  =a.upper()+" Axis",
                   options=list(opts.values()),
-                  value  =opts[getattr(p.glyph, a)])
+                  value  =opts[getattr(ps[0].glyph, a)])
 
     if backend == "python":
         def callback(attr, old, new):
-            setattr(p.glyph, a,
-                    list(opts.keys())[list(opts.values()).index(new)])
+            for p in ps:
+                setattr(p.glyph, a,
+                        list(opts.keys())[list(opts.values()).index(new)])
         s.on_change("value", callback)
     else:
         raise ValueError('the only supported backend is "python"')
