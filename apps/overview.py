@@ -130,15 +130,15 @@ inputs  = bl.widgetbox(select_x, select_y, sizing_mode="fixed")
 scatter = bl.row(inputs, fig)
 
 #------------------------------------------------------------------------------
-# Horizontal Linked view
-fig1 = bp.figure(plot_height=360, plot_width=360,
+# Horizontal linked view
+fig1 = bp.figure(plot_height=720, plot_width=360,
                  toolbar_location="above", tools=[hover,
                  "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
                  output_backend="webgl")
 plt1 = fig1.circle(x="datetime", y="resid_phas", color="color",
                    source=src, size=5)
 
-fig2 = bp.figure(plot_height=360, plot_width=360,
+fig2 = bp.figure(plot_height=720, plot_width=360,
                  y_range=fig1.y_range,
                  toolbar_location="above", tools=[hover,
                  "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
@@ -156,15 +156,15 @@ inputs  = bl.widgetbox(select_x1, select_x2, select_y12, sizing_mode="fixed")
 hlinked = bl.row(inputs, fig1, fig2)
 
 #------------------------------------------------------------------------------
-# Veritcal Linked view
-fig1 = bp.figure(plot_height=360, plot_width=360,
+# Vertical linked view
+fig1 = bp.figure(plot_height=360, plot_width=720,
                  toolbar_location="above", tools=[hover,
                  "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
                  output_backend="webgl")
 plt1 = fig1.circle(x="datetime", y="resid_phas", color="color",
                    source=src, size=5)
 
-fig2 = bp.figure(plot_height=360, plot_width=360,
+fig2 = bp.figure(plot_height=360, plot_width=720,
                  x_range=fig1.x_range,
                  toolbar_location="above", tools=[hover,
                  "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
@@ -220,7 +220,7 @@ update() # update once to populate the bokeh column data source
 all = bl.column(bl.widgetbox(global_cb),
                 iw.Tabs({"Time Series":           time_series,
                          "Scatter Plot":          scatter,
-                         "Horizontal Linked VIew":hlinked,
+                         "Horizontal Linked View":hlinked,
                          "Vertical Linked View":  vlinked}))
 
 bp.curdoc().add_root(all)
