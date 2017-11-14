@@ -47,42 +47,7 @@ util.add_gmst(df)
 print(df.columns)
 src = bm.ColumnDataSource(data={k:[] for k in df.columns})
 
-#------------------------------------------------------------------------------
-# Create hover tool with some useful information; use it for a Bokeh
-# figure; create a scatter plot
-hover = bm.HoverTool(tooltips=[
-    ("Baseline",     "@site1 @site2"),
-    ("(u,v)",        "(@u, @v)"),
-    ("Polarization", "@polarization"),
-    ("Path",         "@path"),
-])
-
-#------------------------------------------------------------------------------
-# Time series
-fig = bp.figure(title="Time series",
-                plot_height=360, plot_width=1024,
-                x_axis_type='datetime',
-                toolbar_location="above", tools=[hover,
-                "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
-                output_backend="webgl")
-plt = fig.circle(x="datetime", y="resid_phas", color="color",
-                 source=src, size=5)
-
-# Layout widgets;
-time_series = bl.column(fig)
-
-#------------------------------------------------------------------------------
-# Scatter plot
-fig = bp.figure(title="Scatter plot",
-                plot_height=720, plot_width=720,
-                toolbar_location="above", tools=[hover,
-                "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
-                output_backend="webgl")
-plt = fig.circle(x="datetime", y="resid_phas", color="color",
-                 source=src, size=5)
-
-# Map pandas column names to selection box options; create selection
-# boxes for the x- and y-axes
+# Map pandas column names to selection box options;
 opts = {
     "datetime"     : "Time",
     "gmst"         : "GMST",
@@ -118,6 +83,45 @@ opts = {
     # "site2" "source", "srch_cotime", "timetag", "two", "version",
     # "year",
 }
+
+# Create hover tool with some useful information; use it for a Bokeh
+# figure; create a scatter plot
+hover = bm.HoverTool(tooltips=[
+    ("Baseline",     "@site1 @site2"),
+    ("(u,v)",        "(@u, @v)"),
+    ("Polarization", "@polarization"),
+    ("Path",         "@path"),
+])
+
+#------------------------------------------------------------------------------
+# Time series
+fig = bp.figure(title="Time series",
+                plot_height=360, plot_width=1024,
+                x_axis_type='datetime',
+                toolbar_location="above", tools=[hover,
+                "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+                output_backend="webgl")
+plt = fig.circle(x="datetime", y="resid_phas", color="color",
+                 source=src, size=5)
+
+# Create selection boxes for the and y-axes
+select_y = iw.Select(plt, 'y', opts)
+
+# Layout widgets;
+inputs      = bl.widgetbox(select_y, sizing_mode="fixed")
+time_series = bl.column(fig, inputs)
+
+#------------------------------------------------------------------------------
+# Scatter plot
+fig = bp.figure(title="Scatter plot",
+                plot_height=720, plot_width=720,
+                toolbar_location="above", tools=[hover,
+                "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+                output_backend="webgl")
+plt = fig.circle(x="datetime", y="resid_phas", color="color",
+                 source=src, size=5)
+
+# Create selection boxes for the x- and y-axes
 select_x = iw.Select(plt, 'x', opts)
 select_y = iw.Select(plt, 'y', opts)
 
