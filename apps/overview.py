@@ -31,13 +31,10 @@ print('Inspecting file{} "{}"'.format('s' if len(files) > 1 else '', files))
 # Read an alist file; rename columns; add new columns
 df = hops.read_alist(files[0])
 
-df["r"]     = np.sqrt(df.u**2 + df.v**2)
+df['r']     = np.sqrt(df.u**2 + df.v**2)
 df['site1'] = df.baseline.str[0]
 df['site2'] = df.baseline.str[1]
-
-df["color"] = ["red" if df.site1[i] == "A" or df.site2[i] == "A" else "green"
-               for i in range(len(df))]
-df.color[df.site1 == df.site2] = "blue"
+df['color'] = "black"
 
 util.add_path(df)
 util.add_gmst(df)
@@ -192,13 +189,32 @@ vlinked = bl.row(inputs, bl.gridplot([[fig1], [fig2]]))
 #------------------------------------------------------------------------------
 # Global controls and layout
 
-pols      = sorted(df.polarization.unique(), reverse=True)
-last      = [1,2,3,4]
-global_cb = bw.CheckboxButtonGroup(labels=["Auto-correlation"]+pols,
-                                   active=last)
+#sites     = sorted(np.union1d(df.site1.unique(), df.site2.unique()))
+pols       = sorted(df.polarization.unique(), reverse=True)
+cols       = ["Auto, ALMA, else", "Site1", "Site2"]
+last       = [1,2,3,4]
+global_cb  = bw.CheckboxButtonGroup(labels=["Auto-correlation"]+pols,
+                                    active=last)
+colored_by = bw.RadioButtonGroup(labels=cols,
+                                 active=0)
+
 def update():
     global last
     active = global_cb.active
+    color  = colored_by.active
+    print(color)
+
+    if color == 0:
+        df['color'] = ["red" if (df.site1[i] == 'A' or
+                                 df.site2[i] == 'A') else "green"
+                       for i in range(len(df))]
+        df.color[df.site1 == df.site2] = "blue"
+    elif color == 1:
+        sites = sorted(df.site1.unique())
+        # TODO: implement color mapping
+    elif color == 2:
+        sites = sorted(df.site2.unique())
+        # TODO: implement color mapping
 
     if 0 in active:
         # include auto-correlation
@@ -222,10 +238,11 @@ def update():
     src.data = src.from_df(df2)
 
 global_cb.on_change("active", lambda attr, old, new: update())
+colored_by.on_change("active", lambda attr, old, new: update())
 update() # update once to populate the bokeh column data source
 
 # Add everything to the root
-all = bl.column(bl.widgetbox(global_cb),
+all = bl.column(bl.widgetbox(global_cb, colored_by),
                 iw.Tabs({"Time Series":           timeseries,
                          "Scatter Plot":          scatter,
                          "Horizontal Linked View":hlinked,
