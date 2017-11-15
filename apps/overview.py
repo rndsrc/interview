@@ -213,12 +213,12 @@ def update():
         sites = sorted(df.site1.unique())
         f     = 256 / len(sites)
         for i, v in enumerate(sites):
-            df.color[df.site1 == v] = bc.HSL(f * i, 0.75 0.5).to_rgb()
+            df.color[df.site1 == v] = bc.HSL(f * i, 0.75, 0.5).to_rgb()
     elif color == 2:
         sites = sorted(df.site2.unique())
         f     = 256 / len(sites)
         for i, v in enumerate(sites):
-            df.color[df.site2 == v] = bc.HSL(f * i, 0.75 0.5).to_rgb()
+            df.color[df.site2 == v] = bc.HSL(f * i, 0.75, 0.5).to_rgb()
 
     if 0 in active:
         # include auto-correlation
