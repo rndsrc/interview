@@ -11,6 +11,7 @@ import numpy  as np
 
 import bokeh.layouts        as bl
 import bokeh.models         as bm
+import bokeh.colors         as bc
 import bokeh.models.widgets as bw
 import bokeh.plotting       as bp
 
@@ -191,7 +192,7 @@ vlinked = bl.row(inputs, bl.gridplot([[fig1], [fig2]]))
 
 #sites     = sorted(np.union1d(df.site1.unique(), df.site2.unique()))
 pols       = sorted(df.polarization.unique(), reverse=True)
-cols       = ["Auto, ALMA, else", "Site1", "Site2"]
+cols       = ["ALMA, others, auto", "Site1", "Site2"]
 last       = [1,2,3,4]
 global_cb  = bw.CheckboxButtonGroup(labels=["Auto-correlation"]+pols,
                                     active=last)
@@ -202,7 +203,6 @@ def update():
     global last
     active = global_cb.active
     color  = colored_by.active
-    print(color)
 
     if color == 0:
         df['color'] = ["red" if (df.site1[i] == 'A' or
@@ -211,10 +211,14 @@ def update():
         df.color[df.site1 == df.site2] = "blue"
     elif color == 1:
         sites = sorted(df.site1.unique())
-        # TODO: implement color mapping
+        f     = 256 / len(sites)
+        for i, v in enumerate(sites):
+            df.color[df.site1 == v] = bc.HSL(f * i, 0.75 0.5).to_rgb()
     elif color == 2:
         sites = sorted(df.site2.unique())
-        # TODO: implement color mapping
+        f     = 256 / len(sites)
+        for i, v in enumerate(sites):
+            df.color[df.site2 == v] = bc.HSL(f * i, 0.75 0.5).to_rgb()
 
     if 0 in active:
         # include auto-correlation
