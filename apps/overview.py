@@ -53,7 +53,7 @@ opts_time = {
     "gmst"         : "GMST",
 }
 
-opts = {
+opts_all = {
     "datetime"     : "Time",
     "gmst"         : "GMST",
 
@@ -111,7 +111,7 @@ plt = fig.circle(x="datetime", y="resid_phas", color="color",
 
 # Create selection boxes for the and y-axes
 select_x = iw.Select(plt, 'x', opts_time)
-select_y = iw.Select(plt, 'y', opts)
+select_y = iw.Select(plt, 'y', opts_all)
 
 # Layout widgets;
 inputs     = bl.widgetbox(select_x, select_y, sizing_mode="fixed")
@@ -128,8 +128,8 @@ plt = fig.circle(x="datetime", y="resid_phas", color="color",
                  source=src, size=5)
 
 # Create selection boxes for the x- and y-axes
-select_x = iw.Select(plt, 'x', opts)
-select_y = iw.Select(plt, 'y', opts)
+select_x = iw.Select(plt, 'x', opts_all)
+select_y = iw.Select(plt, 'y', opts_all)
 
 # Layout widgets;
 inputs  = bl.widgetbox(select_x, select_y, sizing_mode="fixed")
@@ -154,9 +154,9 @@ plt2 = fig2.circle(x="datetime", y="resid_phas", color="color",
                    source=src, size=5)
 
 # Create selection boxes for the x- and y-axes
-select_x1  = iw.Select(plt1, 'x', opts)
-select_x2  = iw.Select(plt2, 'x', opts)
-select_y12 = iw.Select([plt1, plt2], 'y', opts)
+select_x1  = iw.Select(plt1, 'x', opts_all)
+select_x2  = iw.Select(plt2, 'x', opts_all)
+select_y12 = iw.Select([plt1, plt2], 'y', opts_all)
 
 # Layout widgets;
 inputs  = bl.widgetbox(select_x1, select_x2, select_y12, sizing_mode="fixed")
@@ -181,9 +181,9 @@ plt2 = fig2.circle(x="datetime", y="resid_phas", color="color",
                    source=src, size=5)
 
 # Create selection boxes for the x- and y-axes
-select_x12 = iw.Select([plt1, plt2], 'x', opts)
-select_y1  = iw.Select(plt1, 'y', opts)
-select_y2  = iw.Select(plt2, 'y', opts)
+select_x12 = iw.Select([plt1, plt2], 'x', opts_all)
+select_y1  = iw.Select(plt1, 'y', opts_all)
+select_y2  = iw.Select(plt2, 'y', opts_all)
 
 # Layout widgets;
 inputs  = bl.widgetbox(select_x12, select_y1, select_y2, sizing_mode="fixed")
