@@ -48,6 +48,11 @@ print(df.columns)
 src = bm.ColumnDataSource(data={k:[] for k in df.columns})
 
 # Map pandas column names to selection box options;
+opts_time = {
+    "datetime"     : "Time",
+    "gmst"         : "GMST",
+}
+
 opts = {
     "datetime"     : "Time",
     "gmst"         : "GMST",
@@ -105,10 +110,11 @@ plt = fig.circle(x="datetime", y="resid_phas", color="color",
                  source=src, size=5)
 
 # Create selection boxes for the and y-axes
+select_x = iw.Select(plt, 'x', opts_time)
 select_y = iw.Select(plt, 'y', opts)
 
 # Layout widgets;
-inputs     = bl.widgetbox(select_y, sizing_mode="fixed")
+inputs     = bl.widgetbox(select_x, select_y, sizing_mode="fixed")
 timeseries = bl.column(fig, inputs)
 
 #------------------------------------------------------------------------------
