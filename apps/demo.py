@@ -189,7 +189,6 @@ vlinked = bl.row(inputs, bl.gridplot([[fig1], [fig2]]))
 
 #------------------------------------------------------------------------------
 # Global controls and layout
-
 #sites     = sorted(np.union1d(df.site1.unique(), df.site2.unique()))
 pols       = sorted(df.polarization.unique(), reverse=True)
 cols       = ["ALMA, others, auto", "Site1", "Site2"]
