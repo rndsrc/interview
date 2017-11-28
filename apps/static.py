@@ -17,9 +17,15 @@ df = hops.read_alist("er1/hops-lo/5.+close/data/alist.v6")
 df['ampdiff'] = df['snr']
 
 # Add other useful columns
+util.add_path(df)
+
 df['site1'] = df.baseline.str[0]
 df['site2'] = df.baseline.str[1]
-util.add_path(df)
+
+cmap = {'3C279' : "red",
+        'OJ287' : "green",
+        'others': "blue"}
+df['color'] = df.apply(lambda r: cmap.get(r['source'], cmap['others']), axis=1)
 
 # Create hover tool with some useful information
 hover = bm.HoverTool(tooltips=[
@@ -29,13 +35,13 @@ hover = bm.HoverTool(tooltips=[
 ])
 
 # only include useful columns to reduce html size
-src = bm.ColumnDataSource(data=df[['amp', 'ampdiff',
+src = bm.ColumnDataSource(data=df[['amp', 'ampdiff', 'color',
                                    'site1', 'site2', 'u', 'v', 'path']])
 
 #------------------------------------------------------------------------------
 # Make scatter plot
 fig = bp.figure(tools=[hover,"pan,box_zoom,reset"])
-plt = fig.circle(x="amp", y="ampdiff", source=src)
+plt = fig.circle(x="amp", y="ampdiff", color="color", source=src)
 
 #------------------------------------------------------------------------------
 # Output and show static HTML
