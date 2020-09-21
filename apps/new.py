@@ -23,17 +23,17 @@ import sys
 def main():
     # checks system input
     # TODO: Check file types in arguments?
-    if len(sys.argv)>3:
-        print("you have entered too many arguemnts")
-        return False
-    with open(sys.argv[-1], 'r') as f:
-        uvfitscode_color = yaml.load(f)
-    output_file('newtest.html')
     # these are the column values
     csv_fields= [a.strip() for a in """time(UTC),T1,T2,U(lambda),
     V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy)""".split(',')]
+    #checking for multiple csv files. The last one is ignored as it is a yaml file
+    df = pd.concat(\
+        map(lambda file: pd.read_csv(file,names=csv_fields,skiprows=2),sys.argv[1:-1]))
+    with open(sys.argv[-1], 'r') as f:
+        uvfitscode_color = yaml.load(f)
+    output_file('lambdamaptestwith2files.html')
 
-    df=table = pd.read_csv(sys.argv[1], names=csv_fields,skiprows=2)
+    
     p = bp.figure(plot_width=800, plot_height=800,output_backend="webgl")
     p.xaxis.axis_label = "U"
     p.yaxis.axis_label = "V"
@@ -76,8 +76,8 @@ def display_all_uv(uv_fitscode, point_color,p,df):
     second_loc=df.loc[df['T2'] == uv_fitscode]
     first_loc.append(second_loc, ignore_index=True)
     rev_loc=mirror_uv(first_loc)
-    p.circle(first_loc["U(lambda)"],first_loc["V(lambda)"], size=2, color=point_color)
-    p.circle(rev_loc["U(lambda)"],rev_loc["V(lambda)"], size=2, color=point_color)
+    p.circle(first_loc["U(lambda)"],first_loc["V(lambda)"], size=6, color=point_color)
+    p.circle(rev_loc["U(lambda)"],rev_loc["V(lambda)"], size=6, color=point_color)
 
 
 
