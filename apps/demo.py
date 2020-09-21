@@ -24,7 +24,7 @@ from eat.io import hops, util
 if len(sys.argv) > 1:
     files = sys.argv[1:]
 else:
-    files = ["er1/hops-lo/5.+close/data/alist.v6"]
+    files = ["alist.v6"]
 
 print('Inspecting file{} "{}"'.format('s' if len(files) > 1 else '', files))
 

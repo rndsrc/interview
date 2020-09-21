@@ -31,12 +31,17 @@ def main():
         map(lambda file: pd.read_csv(file,names=csv_fields,skiprows=2),sys.argv[1:-1]))
     with open(sys.argv[-1], 'r') as f:
         uvfitscode_color = yaml.load(f)
-    output_file('lambdamaptestwith2files.html')
+    # TODO: Use sys.argv maybe
+    
+    output_file('sample.html')
 
     
     p = bp.figure(plot_width=800, plot_height=800,output_backend="webgl")
     p.xaxis.axis_label = "U"
     p.yaxis.axis_label = "V"
+    # flips x axis to decreasing order
+    p.x_range.flipped= True
+
     for uv_fitscode, color in uvfitscode_color.items():
         display_all_uv(uv_fitscode, color, p, df)
     show(p)
@@ -78,8 +83,6 @@ def display_all_uv(uv_fitscode, point_color,p,df):
     rev_loc=mirror_uv(first_loc)
     p.circle(first_loc["U(lambda)"],first_loc["V(lambda)"], size=6, color=point_color)
     p.circle(rev_loc["U(lambda)"],rev_loc["V(lambda)"], size=6, color=point_color)
-
-
 
 
 
