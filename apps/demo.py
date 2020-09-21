@@ -42,7 +42,6 @@ util.add_gmst(df)
 
 # Create empty Bokeh column data source with column names matching the
 # pandas data frmae
-print(df.columns)
 src = bm.ColumnDataSource(data={k:[] for k in df.columns})
 
 # Map pandas column names to selection box options;
