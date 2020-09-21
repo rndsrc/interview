@@ -16,10 +16,12 @@ from bokeh.io import output_file, show
 import matplotlib.pyplot as plt
 import yaml
 import sys
-
 # check yaml file for color to location mappings
 
 # TODO: Implement Tabs
+# TODO: Stream instead of static .
+# Look at demo.py for examples
+
 def main():
     # checks system input
     # TODO: Check file types in arguments?
@@ -32,8 +34,8 @@ def main():
     with open(sys.argv[-1], 'r') as f:
         uvfitscode_color = yaml.load(f)
     # TODO: Use sys.argv maybe
-    
-    output_file('sample.html')
+
+    output_file('aggregate_baseline.html')
 
     
     p = bp.figure(plot_width=800, plot_height=800,output_backend="webgl")
@@ -52,6 +54,7 @@ def mirror_uv(df):
     Returns new array with the additive inverse of the phase, u, v
     and swapped T1 and T2 indexes
     """
+    # deepcopy ensures anti-aliasing but check if necessary
     df2=df.copy(deep=True)
     col_list=list(df)
     col_list[1], col_list[2] = col_list[2], col_list[1]
@@ -62,6 +65,7 @@ def mirror_uv(df):
     return df2
 
     
+# TODO: Learn iw.Select, bokeh tabs and making multiple plots at once
 
 # TODO : Convert this into RGB values
 # Eg: bc.HSL(f * i, 0.75, 0.5).to_rgb()
