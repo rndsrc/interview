@@ -43,7 +43,11 @@ def main():
     #     map(lambda file: pd.read_csv(file,names=csv_fields,skiprows=2),sys.argv[1:-1]))
     d = eh.obsdata.load_uvfits(sys.argv[1])
     df = pd.DataFrame(d.unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))
-    df['sqrtu2v2'] = np.sqrt(df.u**2 + df.v**2)
+    # after lambda
+    # df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file)\
+    #     .unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))\
+    #      ,sys.argv[1:-1]) )
+    df['r'] = np.sqrt(df.u**2 + df.v**2)
     df.columns=csv_fields
     with open(sys.argv[-1], 'r') as f:
         uvfitscode_color = yaml.load(f)
@@ -55,19 +59,26 @@ def main():
             tool_tips_list.append((title,"@"+"{"+title+"}"))
         else:
             tool_tips_list.append((title,"@"+title))
-    output_file('withhover.html')
+    output_file('2plots.html')
     hover = bm.HoverTool(tooltips=tool_tips_list)
     title_of_plot=input("Enter title")
     fig = bp.figure(title=title_of_plot,
+                plot_height=800, plot_width=800
+                ,x_axis_label="U(Lambda)",y_axis_label= "V(Lambda)",
+                toolbar_location="right", tools=[hover,
+                "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+                output_backend="webgl")
+    fig2 = bp.figure(title='r vs amplitude',
                 plot_height=800, plot_width=800
                 ,x_axis_label="sqrt(u^2+v^2)",y_axis_label= "Iamp(Jy)",
                 toolbar_location="right", tools=[hover,
                 "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
                 output_backend="webgl")
+                
 
     for uv_fitscode, color in uvfitscode_color.items():
-        display_all_uv(uv_fitscode, color, fig, df)
-    show(fig)
+        display_all_uv(uv_fitscode, color, fig,fig2,df)
+    show(bl.row(fig,fig2))
 # TODO: Code logic for opening multiple csv files
 # . Top panels: aggregate baseline coverage for EHT observations of M87,
 #  combining observations on all four days. The left panel shows short-baseline
@@ -101,11 +112,10 @@ def mirror_uv(df):
 # TODO : Add hover capabilities
 # https://www.kite.com/python/examples/2926/yaml-dump-a-dictionary-to-a-yaml-document
 
-def display_all_uv(uv_fitscode, point_color,fig,df):
+def display_all_uv(uv_fitscode, point_color,fig,fig2,df):
     """Reads the dataframe, filters it by the uv_fitscode values in
     both T1 and T2, mirrors it  by calling mirror_uv and plots both dataframes
     as glyphs
-
         uv_fitscode: two lettered string like AA, AZ, AP
         point_color: color of the glyph
     """
@@ -118,10 +128,15 @@ def display_all_uv(uv_fitscode, point_color,fig,df):
     src2=bm.ColumnDataSource(rev_loc)
     # flipping x axis to decreasing order
     fig.x_range.flipped= True
-    fig.circle(x="sqrtu2v2", y="Iamp(Jy)", color=point_color,
+    fig.circle(x="U(lambda)", y="V(lambda)", color=point_color,
                     source=src1, size=6)
-    fig.circle(x="sqrtu2v2", y="Iamp(Jy)",  color=point_color,
+    fig.circle(x="U(lambda)", y="V(lambda)",   color=point_color,
                     source=src2, size=6)
+    fig2.circle(x="sqrtu2v2",y= "Iamp(Jy)",\
+        color=point_color,source=src1, size=6)
+    fig2.circle(x="sqrtu2v2",y= "Iamp(Jy)",\
+        color=point_color,source=src2, size=6)
+
 
 if __name__ == "__main__":
     main()
@@ -132,3 +147,9 @@ if __name__ == "__main__":
 # display them horizontally
 # Reduce time inefficiency via streaming
 #TODO: Use bokeh tabs to see if you can do that
+
+
+# cols = ["6","7","10","12"]
+
+# global_cb  = bw.CheckboxButtonGroup(labels=cols)
+
