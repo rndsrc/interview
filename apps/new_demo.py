@@ -23,6 +23,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from bokeh.io import curdoc
+
+from bokeh.transform import factor_cmap
 #TODO: 
 
 # ALMA–APEX= AA,AP
@@ -37,10 +39,53 @@ from bokeh.io import curdoc
 
 #TODO: CONVERT INTO NON FUNCTIONAL PROGRAMMING
 
-# checks system input
-# TODO: Check file types in arguments?
-# these are the column values
+csv_fields= [a.strip() for a in """time(UTC),T1,T2,U(lambda),
+    V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
 
+df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
+        unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))\
+         ,sys.argv[1:-1]) )
+
+df['r'] = np.sqrt(df.u**2 + df.v**2)
+df.columns=csv_fields
+with open(sys.argv[-1], 'r') as f:
+    uvfitscode_color = yaml.load(f)
+# auto load the csv headers into the hovertool
+tool_tips_list=[]
+for title in csv_fields:
+    if "(" in title or ")" in title:
+        # account for proper format brackets in titles
+        tool_tips_list.append((title,"@"+"{"+title+"}"))
+    else:
+        tool_tips_list.append((title,"@"+title))
+output_file('testrightnow.html')
+hover = bm.HoverTool(tooltips=tool_tips_list)
+title_of_plot=''
+fig = bp.figure(title=title_of_plot,
+            plot_height=800, plot_width=800
+            ,x_axis_label="U(Lambda)",y_axis_label= "V(Lambda)",
+            toolbar_location="right", tools=[hover,
+            "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+            output_backend="webgl")
+fig2 = bp.figure(title='r vs amplitude',
+            plot_height=800, plot_width=800
+            ,x_axis_label="r",y_axis_label= "Iamp(Jy)",
+            toolbar_location="right", tools=[hover,
+            "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+            output_backend="webgl")
+
+
+
+
+def main():
+
+                
+
+    for uv_fitscode, color in uvfitscode_color.items():
+        d
+        display_all_uv(uv_fitscode, color,fig,fig2,df)
+    bp.curdoc().add_root(bl.row(fig,fig2))
+    bp.curdoc().title = "4 day plot"
 
     
 
@@ -96,16 +141,18 @@ def display_all_uv(uv_fitscode, point_color,fig,fig2,df):
     src2=bm.ColumnDataSource(rev_loc)
     # flipping x axis to decreasing order
     fig.x_range.flipped= True
-    fig.circle(x=x1, y=y1, color=point_color,
+    fig.circle(x="U(lambda)", y="V(lambda)", color=point_color,
                     source=src1, size=6)
-    fig.circle(x=x1, y=y1,   color=point_color,
+    fig.circle(x="U(lambda)", y="V(lambda)",   color=uvfitscode_color[""],
                     source=src2, size=6)
 
-    fig2.circle(x=x2,y= y2,\
+    fig2.circle(x="sqrtu2v2",y= "Iamp(Jy)",\
         color=point_color,source=src1, size=6)
-    fig2.circle(x=x2,y= y2,\
+    fig2.circle(x="sqrtu2v2",y= "Iamp(Jy)",\
         color=point_color,source=src2, size=6)
 
+
+main()
 
 
 
@@ -119,63 +166,4 @@ def display_all_uv(uv_fitscode, point_color,fig,fig2,df):
 # cols = ["6","7","10","12"]
 
 # global_cb  = bw.CheckboxButtonGroup(labels=cols)
-
-csv_fields= [a.strip() for a in """time(UTC),T1,T2,U(lambda),
-V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
-#checking for multiple csv files. The last one is ignored as it is a yaml file
-# df = pd.concat(\
-#     map(lambda file: pd.read_csv(file,names=csv_fields,skiprows=2),sys.argv[1:-1]))
-# d = eh.obsdata.load_uvfits(sys.argv[1])
-# df = pd.DataFrame(d.unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))
-# after lambda
-
-df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
-unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))\
-,sys.argv[1:-1]) )
-
-csv_fields= [a.strip() for a in """time(UTC),T1,T2,U(lambda),
-V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
-df['r'] = np.sqrt(df.u**2 + df.v**2)
-df.columns=csv_fields
-with open(sys.argv[-1], 'r') as f:
-    uvfitscode_color = yaml.load(f)
-# auto load the csv headers into the hovertool
-tool_tips_list=[]
-for title in csv_fields:
-    if "(" in title or ")" in title:
-    # account for proper format brackets in titles
-        tool_tips_list.append((title,"@"+"{"+title+"}"))
-    else:
-        tool_tips_list.append((title,"@"+title))
-output_file('testrightnow.html')
-hover = bm.HoverTool(tooltips=tool_tips_list)
-x1,y1,x2,y2='U(lambda)','V(lambda)',"time(UTC)","sqrtu2v2"
-
-# x1=csv_fields[0]
-# y1=csv_fields[3]
-# x2=csv_fields[-1]
-# y2=csv_fields[6]
-fig = bp.figure(title="{} vs {}".format(x1,y1),
-    plot_height=800, plot_width=800
-    ,x_axis_label=x1,y_axis_label= y1,
-    toolbar_location="right", tools=[hover,
-    "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
-    output_backend="webgl")
-fig2 = bp.figure(title='{} vs {}'.format(x2,y2),
-    plot_height=800, plot_width=800
-    ,x_axis_label=x2,y_axis_label= y2,
-    toolbar_location="right", tools=[hover,
-    "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
-    output_backend="webgl")
-    
-
-for uv_fitscode, color in uvfitscode_color.items():
-    display_all_uv(uv_fitscode, color,fig,fig2,df)
-bp.curdoc().add_root(bl.row(fig,fig2))
-bp.curdoc().title = "4 day plot"
-
-
-
-
-
 

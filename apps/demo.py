@@ -37,14 +37,14 @@ df['r']     = np.sqrt(df.u**2 + df.v**2)
 df['site1'] = df.baseline.str[0]
 df['site2'] = df.baseline.str[1]
 df['color'] = "black"
-
-print(df.columns)
+df.to_csv('acsv.csv')
 util.add_path(df)
 util.add_gmst(df)
 
 # Create empty Bokeh column data source with column names matching the
 # pandas data frmae
 src = bm.ColumnDataSource(data={k:[] for k in df.columns})
+print(src)
 
 # Map pandas column names to selection box options;
 opts_time = {
