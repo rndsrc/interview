@@ -2,7 +2,7 @@
 # python new.py csv_filename1 csv_filename2 ...... yaml_filename
 # python new.py uv1a.csv locations.yaml
 import sys
-# python new.py 
+# python new.py
 import pandas as pd
 import numpy  as np
 import bokeh.layouts        as bl
