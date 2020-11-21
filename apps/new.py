@@ -1,12 +1,10 @@
-# run file as python new.py uv1a.csv locations.yaml
-# python new.py csv_filename1 csv_filename2 ...... yaml_filename
-# python new.py uv1a.csv locations.yaml
+# sample run bokeh serve --show new.py --port 8080 --args a.uvfits a2.uvfits b.uvfits b2.uvfits c.uvfits c2.uvfits d.uvfits d2.uvfits locations.yaml
+# format serve --show new.py --port 8080 --args uvfitsfile1,uvfitsfile2,........... yaml_file.yaml (default is locations.yaml)
 import sys
 from bokeh.models.layouts import Panel, Row, Tabs
 
 import interview.widget.select as Select
 
-# python new.py
 import pandas as pd
 import numpy  as np
 import bokeh.layouts        as bl
@@ -28,34 +26,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from bokeh.io import curdoc
-#TODO: 
-
-# ALMA–APEX= AA,AP
-# SMA–JCMT = JC,SM
-# check yaml file for color to location mappings
-# TODO: Load and visualize yaml files
-# TODO: Learn diffmap library
-# TODO: Implement Tabs
-# TODO: Stream instead of static .
-# Look at demo.py for examples
-# TODO: 
-
-#TODO: CONVERT INTO NON FUNCTIONAL PROGRAMMING
-
-# checks system input
-# TODO: Check file types in arguments?
-# these are the column values
-
-
-    
-
-
-
-# TODO: Code logic for opening multiple csv files
-# . Top panels: aggregate baseline coverage for EHT observations of M87,
-#  combining observations on all four days. The left panel shows short-baseline
-# coverage, comprised of ALMA interferometer baselines and intra-site EHT baselines (SMA–JCMT and ALMA–APEX). 
-#SMA–JCMT and ALMA–APEX
 
 def mirror_uv(df):
     """T1 <-> T2 => u, v -> -u, -v; amp  -> amp, phase -> -phase.
@@ -76,44 +46,6 @@ def mirror_uv(df):
     df2["Iphase(d)"]*=-1
     return df2
 
-
-# TODO: Learn iw.Select, bokeh tabs and making multiple plots at once
-
-# TODO : Convert this into RGB values
-# Eg: bc.HSL(f * i, 0.75, 0.5).to_rgb()
-# TODO : Add hover capabilities
-# https://www.kite.com/python/examples/2926/yaml-dump-a-dictionary-to-a-yaml-document
-
-def display_all_uv(uv_fitscode, point_color,fig,fig2,df):
-    """Reads the dataframe, filters it by the uv_fitscode values in
-    both T1 and T2, mirrors it  by calling mirror_uv and plots both dataframes
-    as glyphs
-        uv_fitscode: two lettered string like AA, AZ, AP
-        point_color: color of the glyph
-    """
-    rev_df=mirror_uv(df)
-    aloc=first_loc.append(rev_loc)
-    src1= bm.ColumnDataSource(aloc)
-    return src1
-    src1= bm.ColumnDataSource(aloc)
-    # flipping x axis to decreasing order
-    
-    fig.circle(x=x1, y=y1, color=point_color,
-                    source=aloc, size=6)
-
-    fig2.circle(x=x2,y= y2,\
-        color=point_color,source=aloc, size=6)
-
-# Given n csv files grouped m times each
-# Create n/m plots
-# display them horizontally
-# Reduce time inefficiency via streaming
-#TODO: Use bokeh tabs to see if you can do that
-
-
-# cols = ["6","7","10","12"]
-
-# global_cb  = bw.CheckboxButtonGroup(labels=cols)
 
 csv_fields= [a.strip() for a in """time(UTC),T1,T2,U(lambda),
 V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
@@ -159,7 +91,6 @@ df=df.assign(colors="black")
 for sites,color in uvfitscode_color.items():
     df.loc[((df["T1"] == sites[0]) | (df["T1"] == sites[1])) & ((df["T2"] == sites[0]) | (df["T2"] == sites[1])),"colors"]=color
     
-
 df_final=pd.concat([df,mirror_uv(df)])
 src1 = bm.ColumnDataSource(df_final)
 fig.x_range.flipped= True
@@ -202,7 +133,6 @@ timeseries= bl.row(inputs3, fig3)
 all = bl.column(iw.Tabs({"Visibility and domain":scatter,
                          "Time Series": timeseries},
                         width=1024))
-
 bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo 2"
 
