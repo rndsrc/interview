@@ -2,6 +2,10 @@
 # python new.py csv_filename1 csv_filename2 ...... yaml_filename
 # python new.py uv1a.csv locations.yaml
 import sys
+from bokeh.models.layouts import Panel, Row, Tabs
+
+import interview.widget.select as Select
+
 # python new.py
 import pandas as pd
 import numpy  as np
@@ -86,28 +90,18 @@ def display_all_uv(uv_fitscode, point_color,fig,fig2,df):
         uv_fitscode: two lettered string like AA, AZ, AP
         point_color: color of the glyph
     """
-    
-    # searching for a specific uvfitscode in T1 and T2 and appending it
-    first_loc=df.loc[df['T1'] == uv_fitscode]
-    second_loc=df.loc[df['T2'] == uv_fitscode]
-    first_loc.append(second_loc, ignore_index=True)
-    rev_loc=mirror_uv(first_loc)
-    src1= bm.ColumnDataSource(first_loc)
-    src2=bm.ColumnDataSource(rev_loc)
+    rev_df=mirror_uv(df)
+    aloc=first_loc.append(rev_loc)
+    src1= bm.ColumnDataSource(aloc)
+    return src1
+    src1= bm.ColumnDataSource(aloc)
     # flipping x axis to decreasing order
-    fig.x_range.flipped= True
+    
     fig.circle(x=x1, y=y1, color=point_color,
-                    source=src1, size=6)
-    fig.circle(x=x1, y=y1,   color=point_color,
-                    source=src2, size=6)
+                    source=aloc, size=6)
 
     fig2.circle(x=x2,y= y2,\
-        color=point_color,source=src1, size=6)
-    fig2.circle(x=x2,y= y2,\
-        color=point_color,source=src2, size=6)
-
-
-
+        color=point_color,source=aloc, size=6)
 
 # Given n csv files grouped m times each
 # Create n/m plots
@@ -129,7 +123,7 @@ V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
 # df = pd.DataFrame(d.unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))
 # after lambda
 
-df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
+df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file).
 unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))\
 ,sys.argv[1:-1]) )
 
@@ -137,8 +131,32 @@ csv_fields= [a.strip() for a in """time(UTC),T1,T2,U(lambda),
 V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
 df['r'] = np.sqrt(df.u**2 + df.v**2)
 df.columns=csv_fields
-with open(sys.argv[-1], 'r') as f:
-    uvfitscode_color = yaml.load(f)
+# with open(sys.argv[-1], 'r') as f:
+#     uvfitscode_color = yaml.load(f)
+uvfitscode_color={
+    ('AA', 'AP'): "red",
+('AA', 'AZ'): "green",
+('AA', 'JC'): "blue",
+('AA', 'LM'): "yellow",
+('AA', 'PV'): "pink",
+('AA', 'SM'): "grey",
+('AP', 'AZ'): "purple",
+('AP', 'JC'): "coral",
+('AP', 'LM'): "darkgreen",
+('AP', 'PV'): "darkorange",
+('AP', 'SM'): "darkslateblue",
+('AZ', 'JC'): "orangered",
+('AZ', 'LM'): "plum",
+('AZ', 'PV'): "slateblue",
+('AZ', 'SM'): "slateblue",
+('JC', 'LM'): "peachpuff",
+('JC', 'PV'): "rosybrown",
+('JC', 'SM'): "indigo",
+('LM', 'PV'): "lavender",
+('LM', 'SM'): "darkcyan",
+('PV', 'SM'): "lime"
+}
+
 # auto load the csv headers into the hovertool
 tool_tips_list=[]
 for title in csv_fields:
@@ -149,12 +167,12 @@ for title in csv_fields:
         tool_tips_list.append((title,"@"+title))
 output_file('testrightnow.html')
 hover = bm.HoverTool(tooltips=tool_tips_list)
-x1,y1,x2,y2='U(lambda)','V(lambda)',"time(UTC)","sqrtu2v2"
+# x1,y1,x2,y2='U(lambda)','V(lambda)',"time(UTC)","sqrtu2v2"
 
-# x1=csv_fields[0]
-# y1=csv_fields[3]
-# x2=csv_fields[-1]
-# y2=csv_fields[6]
+x1=csv_fields[-1]
+y1=csv_fields[-4]
+x2=csv_fields[0]
+y2=csv_fields[-3]
 fig = bp.figure(title="{} vs {}".format(x1,y1),
     plot_height=800, plot_width=800
     ,x_axis_label=x1,y_axis_label= y1,
@@ -168,10 +186,36 @@ fig2 = bp.figure(title='{} vs {}'.format(x2,y2),
     "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
     output_backend="webgl")
     
+timeseries = bp.figure(title='{} vs {}'.format(x2,y2),
+    plot_height=800, plot_width=800
+    ,x_axis_label=x2,y_axis_label= y2,
+    toolbar_location="right", tools=[hover,
+    "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+     output_backend="webgl")
+# select = Select(title = "Select plot:", value = "", options = csv_fields)
+print(uvfitscode_color)
+df=df.assign(colors="black")
+for sites,color in uvfitscode_color.items():
+    df.loc[((df["T1"] == sites[0]) | (df["T1"] == sites[1])) & ((df["T2"] == sites[0]) | (df["T2"] == sites[1])),"colors"]=color
+    
 
-for uv_fitscode, color in uvfitscode_color.items():
-    display_all_uv(uv_fitscode, color,fig,fig2,df)
-bp.curdoc().add_root(bl.row(fig,fig2))
+print(len(df))
+df_final=pd.concat([df,mirror_uv(df)])
+print(len(df_final))
+src1 = bm.ColumnDataSource(df_final)
+print(src1)
+fig.x_range.flipped= True
+
+fig.circle(x=x1, y=y1, color="colors",
+                    source=src1, size=6)
+fig2.circle(x=x2,y= y2,\
+        color="colors",source=src1, size=6)
+
+tab1=Panel(child=fig,title='plot 1')
+tab2=Panel(child=fig2,title='plot 2')
+tabs=Tabs(tabs=[tab1,tab2])
+bp.curdoc().add_root(tabs)
+# bp.curdoc().add_root(Row(select))
 bp.curdoc().title = "4 day plot"
 
 
