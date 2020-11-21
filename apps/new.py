@@ -20,6 +20,7 @@ import interview.widget as iw
 from eat.io import hops, util
 from bokeh.io import output_file, show
 import matplotlib.pyplot as plt
+import bokeh.transform as bt
 import yaml
 import sys
 import ehtim as eh
@@ -116,47 +117,15 @@ def display_all_uv(uv_fitscode, point_color,fig,fig2,df):
 
 csv_fields= [a.strip() for a in """time(UTC),T1,T2,U(lambda),
 V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
-#checking for multiple csv files. The last one is ignored as it is a yaml file
-# df = pd.concat(\
-#     map(lambda file: pd.read_csv(file,names=csv_fields,skiprows=2),sys.argv[1:-1]))
-# d = eh.obsdata.load_uvfits(sys.argv[1])
-# df = pd.DataFrame(d.unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))
-# after lambda
 
-df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file).
+df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
 unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))\
 ,sys.argv[1:-1]) )
 
-csv_fields= [a.strip() for a in """time(UTC),T1,T2,U(lambda),
-V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
 df['r'] = np.sqrt(df.u**2 + df.v**2)
 df.columns=csv_fields
-# with open(sys.argv[-1], 'r') as f:
-#     uvfitscode_color = yaml.load(f)
-uvfitscode_color={
-    ('AA', 'AP'): "red",
-('AA', 'AZ'): "green",
-('AA', 'JC'): "blue",
-('AA', 'LM'): "yellow",
-('AA', 'PV'): "pink",
-('AA', 'SM'): "grey",
-('AP', 'AZ'): "purple",
-('AP', 'JC'): "coral",
-('AP', 'LM'): "darkgreen",
-('AP', 'PV'): "darkorange",
-('AP', 'SM'): "darkslateblue",
-('AZ', 'JC'): "orangered",
-('AZ', 'LM'): "plum",
-('AZ', 'PV'): "slateblue",
-('AZ', 'SM'): "slateblue",
-('JC', 'LM'): "peachpuff",
-('JC', 'PV'): "rosybrown",
-('JC', 'SM'): "indigo",
-('LM', 'PV'): "lavender",
-('LM', 'SM'): "darkcyan",
-('PV', 'SM'): "lime"
-}
-
+with open(sys.argv[-1], 'r') as f:
+    uvfitscode_color = yaml.load(f)
 # auto load the csv headers into the hovertool
 tool_tips_list=[]
 for title in csv_fields:
@@ -165,61 +134,77 @@ for title in csv_fields:
         tool_tips_list.append((title,"@"+"{"+title+"}"))
     else:
         tool_tips_list.append((title,"@"+title))
-output_file('testrightnow.html')
 hover = bm.HoverTool(tooltips=tool_tips_list)
-# x1,y1,x2,y2='U(lambda)','V(lambda)',"time(UTC)","sqrtu2v2"
-
-x1=csv_fields[-1]
-y1=csv_fields[-4]
-x2=csv_fields[0]
-y2=csv_fields[-3]
-fig = bp.figure(title="{} vs {}".format(x1,y1),
+fig = bp.figure(title="u vs v graph",
     plot_height=800, plot_width=800
-    ,x_axis_label=x1,y_axis_label= y1,
+    ,x_axis_label="U(lambda)",y_axis_label= "V(lambda)",
     toolbar_location="right", tools=[hover,
     "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
     output_backend="webgl")
-fig2 = bp.figure(title='{} vs {}'.format(x2,y2),
+fig2 = bp.figure(title="r vs Y",
     plot_height=800, plot_width=800
-    ,x_axis_label=x2,y_axis_label= y2,
+    ,x_axis_label="r",y_axis_label= "Y value",
     toolbar_location="right", tools=[hover,
     "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
     output_backend="webgl")
     
-timeseries = bp.figure(title='{} vs {}'.format(x2,y2),
+fig3 = bp.figure(title="Time Series",
     plot_height=800, plot_width=800
-    ,x_axis_label=x2,y_axis_label= y2,
+    ,x_axis_label="Time(UTC)",y_axis_label= "Y value",
     toolbar_location="right", tools=[hover,
     "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
      output_backend="webgl")
-# select = Select(title = "Select plot:", value = "", options = csv_fields)
-print(uvfitscode_color)
+fig3.sizing_mode = 'scale_both'
 df=df.assign(colors="black")
 for sites,color in uvfitscode_color.items():
     df.loc[((df["T1"] == sites[0]) | (df["T1"] == sites[1])) & ((df["T2"] == sites[0]) | (df["T2"] == sites[1])),"colors"]=color
     
 
-print(len(df))
 df_final=pd.concat([df,mirror_uv(df)])
-print(len(df_final))
 src1 = bm.ColumnDataSource(df_final)
-print(src1)
 fig.x_range.flipped= True
-
-fig.circle(x=x1, y=y1, color="colors",
+plt1=fig.circle(x="U(lambda)", y="V(lambda)", color="colors",
                     source=src1, size=6)
-fig2.circle(x=x2,y= y2,\
+plt2=fig2.circle(x="sqrtu2v2",y="Iamp(Jy)" ,\
         color="colors",source=src1, size=6)
+plt3=fig3.circle(x="time(UTC)",y="Iamp(Jy)" ,\
+        color="colors",source=src1, size=6)
+        
+selected_circle = bm.Circle(fill_alpha=1, fill_color="firebrick")
+plt1.selection_glyph=selected_circle
 
-tab1=Panel(child=fig,title='plot 1')
-tab2=Panel(child=fig2,title='plot 2')
-tabs=Tabs(tabs=[tab1,tab2])
-bp.curdoc().add_root(tabs)
-# bp.curdoc().add_root(Row(select))
-bp.curdoc().title = "4 day plot"
+plt3.selection_glyph=selected_circle
 
-
-
-
+plt2.selection_glyph=selected_circle
 
 
+opts_all={
+    "time(UTC)": "time",
+    "T1": "Site 1",
+    "T2": "Site 2",
+    "U(lambda)": "u",
+    "V(lambda)": "v",
+    "Iamp(Jy)": "Amplitude",        
+    "Iphase(d)"   : "Phase",
+    "sqrtu2v2": "r"
+}
+
+select_x1  = iw.Select(plt1, 'x', opts_all)
+select_y1  = iw.Select(plt1, 'y', opts_all)
+
+inputs1  = bm.Column(select_x1, select_y1)
+select_y2  = iw.Select(plt2, 'y', opts_all)
+scatter = bl.row(inputs1, fig,select_y2,fig2)
+select_x3  = iw.Select(plt3, 'x', opts_all)
+select_y3  = iw.Select(plt3, 'y', opts_all)
+inputs3  = bm.Column(select_x3, select_y3)
+timeseries= bl.row(inputs3, fig3)
+all = bl.column(iw.Tabs({"Visibility and domain":scatter,
+                         "Time Series": timeseries},
+                        width=1024))
+
+bp.curdoc().add_root(all)
+bp.curdoc().title = "Demo 2"
+
+
+bm.Glyph()
