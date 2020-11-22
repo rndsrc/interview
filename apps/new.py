@@ -10,23 +10,14 @@ import pandas as pd
 import numpy  as np
 import bokeh.layouts        as bl
 import bokeh.models         as bm
-import bokeh.colors         as bc
-import bokeh.models.widgets as bw
 import bokeh.plotting       as bp
 import os
 import interview.widget as iw
-from eat.io import hops, util
-from bokeh.io import output_file, show
-import matplotlib.pyplot as plt
-import bokeh.transform as bt
 import yaml
-import sys
 import ehtim as eh
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from bokeh.io import curdoc
-
 def mirror_uv(df):
     """T1 <-> T2 => u, v -> -u, -v; amp  -> amp, phase -> -phase.
     Returns new array with the additive inverse of the phase, u, v
@@ -53,8 +44,8 @@ file_list=[]
 for root, dirs, files in os.walk('./uvfitsfiles'):
     for file in files:
         if file.endswith('.uvfits'):
-            file_list.append(file)
-            print(os.path.join(root, file))
+            file_list.append(os.path.join(root, file))
+            
 
 
 df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
