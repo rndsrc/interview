@@ -2,6 +2,7 @@
 # format serve --show new.py --port 8080 --args uvfitsfile1,uvfitsfile2,........... yaml_file.yaml (default is locations.yaml)
 import sys
 from bokeh.models.layouts import Panel, Row, Tabs
+from bokeh.models.widgets.buttons import Button
 
 import interview.widget.select as Select
 
@@ -120,16 +121,28 @@ opts_all={
     "sqrtu2v2": "r"
 }
 
+
+# define interaction
+def print_datapoints():
+    indices=src1.selected.indices
+    results=df_final.iloc[indices, :-1]
+    results.to_csv("temp.csv", mode='a', header=False)
+
+btn = Button(label='Write selected points to CSV', button_type='success')
+btn.on_click(print_datapoints)
+
 select_x1  = iw.Select(plt1, 'x', opts_all)
 select_y1  = iw.Select(plt1, 'y', opts_all)
 
-inputs1  = bm.Column(select_x1, select_y1)
+inputs1  = bm.Column(btn,select_x1, select_y1)
 select_y2  = iw.Select(plt2, 'y', opts_all)
 scatter = bl.row(inputs1, fig,select_y2,fig2)
 select_x3  = iw.Select(plt3, 'x', opts_all)
 select_y3  = iw.Select(plt3, 'y', opts_all)
-inputs3  = bm.Column(select_x3, select_y3)
-timeseries= bl.row(inputs3, fig3)
+inputs3  = bm.Column(btn,select_x3, select_y3)
+timeseries= bl.row(inputs3, fig3,)
+
+
 all = bl.column(iw.Tabs({"Visibility and domain":scatter,
                          "Time Series": timeseries},
                         width=1024))
