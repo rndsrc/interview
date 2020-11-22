@@ -1,4 +1,4 @@
-# bokeh serve --show new.py
+# bokeh serve --show new.py or python demo2.py ( both run bokeh servers)
 
 from bokeh.models.layouts import Panel, Row, Tabs
 from bokeh.models.widgets.buttons import Button
