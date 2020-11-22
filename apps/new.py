@@ -1,11 +1,11 @@
-# sample run bokeh serve --show new.py --port 8080 --args a.uvfits a2.uvfits b.uvfits b2.uvfits c.uvfits c2.uvfits d.uvfits d2.uvfits locations.yaml
-# format serve --show new.py --port 8080 --args uvfitsfile1,uvfitsfile2,........... yaml_file.yaml (default is locations.yaml)
-import sys
+# bokeh serve --show new.py
+
 from bokeh.models.layouts import Panel, Row, Tabs
 from bokeh.models.widgets.buttons import Button
 
 import interview.widget.select as Select
 
+import os
 import pandas as pd
 import numpy  as np
 import bokeh.layouts        as bl
@@ -13,7 +13,6 @@ import bokeh.models         as bm
 import bokeh.colors         as bc
 import bokeh.models.widgets as bw
 import bokeh.plotting       as bp
-import datetime
 import os
 import interview.widget as iw
 from eat.io import hops, util
@@ -50,14 +49,21 @@ def mirror_uv(df):
 
 csv_fields= [a.strip() for a in """time(UTC),T1,T2,U(lambda),
 V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
+file_list=[]
+for root, dirs, files in os.walk('./uvfitsfiles'):
+    for file in files:
+        if file.endswith('.uvfits'):
+            file_list.append(file)
+            print(os.path.join(root, file))
+
 
 df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
 unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))\
-,sys.argv[1:-1]) )
+,file_list) )
 
 df['r'] = np.sqrt(df.u**2 + df.v**2)
 df.columns=csv_fields
-with open(sys.argv[-1], 'r') as f:
+with open('./yaml_files/locations.yaml', 'r') as f:
     uvfitscode_color = yaml.load(f)
 # auto load the csv headers into the hovertool
 tool_tips_list=[]
@@ -82,7 +88,7 @@ fig2 = bp.figure(title="r vs Y",
     output_backend="webgl")
     
 fig3 = bp.figure(title="Time Series",
-    plot_height=800, plot_width=800
+    plot_height=1600, plot_width=1600
     ,x_axis_label="Time(UTC)",y_axis_label= "Y value",
     toolbar_location="right", tools=[hover,
     "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
