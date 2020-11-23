@@ -24,7 +24,7 @@ from eat.io import hops, util
 if len(sys.argv) > 1:
     files = sys.argv[1:]
 else:
-    files = ["er1/hops-lo/5.+close/data/alist.v6"]
+    files = ["alist.v6"]
 
 print('Inspecting file{} "{}"'.format('s' if len(files) > 1 else '', files))
 
@@ -32,18 +32,19 @@ print('Inspecting file{} "{}"'.format('s' if len(files) > 1 else '', files))
 # Read an alist file; rename columns; add new columns
 df = hops.read_alist(files[0])
 
+
 df['r']     = np.sqrt(df.u**2 + df.v**2)
 df['site1'] = df.baseline.str[0]
 df['site2'] = df.baseline.str[1]
 df['color'] = "black"
-
+df.to_csv('acsv.csv')
 util.add_path(df)
 util.add_gmst(df)
 
 # Create empty Bokeh column data source with column names matching the
 # pandas data frmae
-print(df.columns)
 src = bm.ColumnDataSource(data={k:[] for k in df.columns})
+print(src)
 
 # Map pandas column names to selection box options;
 opts_time = {
@@ -191,6 +192,7 @@ vlinked = bl.row(inputs, bl.gridplot([[fig1], [fig2]]))
 # Global controls and layout
 #sites     = sorted(np.union1d(df.site1.unique(), df.site2.unique()))
 pols       = sorted(df.polarization.unique(), reverse=True)
+print(pols)
 cols       = ["ALMA, others, auto", "Site1", "Site2"]
 last       = [1,2,3,4]
 global_cb  = bw.CheckboxButtonGroup(labels=["Auto-correlation"]+pols,
@@ -200,6 +202,7 @@ colored_by = bw.RadioButtonGroup(labels=cols,
 
 def update():
     global last
+    
     active = global_cb.active
     color  = colored_by.active
 

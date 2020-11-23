@@ -1,0 +1,43 @@
+? !!python/tuple [AA, AP]
+: red
+? !!python/tuple [AA, AZ]
+: green
+? !!python/tuple [AA, JC]
+: blue
+? !!python/tuple [AA, LM]
+: yellow
+? !!python/tuple [AA, PV]
+: pink
+? !!python/tuple [AA, SM]
+: grey
+? !!python/tuple [AP, AZ]
+: purple
+? !!python/tuple [AP, JC]
+: coral
+? !!python/tuple [AP, LM]
+: darkgreen
+? !!python/tuple [AP, PV]
+: darkorange
+? !!python/tuple [AP, SM]
+: darkslateblue
+? !!python/tuple [AZ, JC]
+: orangered
+? !!python/tuple [AZ, LM]
+: plum
+? !!python/tuple [AZ, PV]
+: slateblue
+? !!python/tuple [AZ, SM]
+: slateblue
+? !!python/tuple [JC, LM]
+: peachpuff
+? !!python/tuple [JC, PV]
+: rosybrown
+? !!python/tuple [JC, SM]
+: indigo
+? !!python/tuple [LM, PV]
+: lavender
+? !!python/tuple [LM, SM]
+: darkcyan
+? !!python/tuple [PV, SM]
+: lime
+
