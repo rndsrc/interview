@@ -257,3 +257,4 @@ all = bl.column(bl.widgetbox(global_cb, colored_by),
 
 bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo"
+# df1['U(lambda)']**2 + df1['V(lambda)']**2
