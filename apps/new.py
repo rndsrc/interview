@@ -78,6 +78,7 @@ for title in csv_fields:
         tool_tips_list.append((title,"@"+"{"+title+"}"))
     else:
         tool_tips_list.append((title,"@"+title))
+tool_tips_list.append(("Custom","@D"))
 hover = bm.HoverTool(tooltips=tool_tips_list)
 fig = bp.figure(title="u vs v graph",
     plot_height=800, plot_width=800
@@ -175,27 +176,29 @@ figtemp.circle(x="D", y="Iamp(Jy)", color="colors",
 def my_text_input_handler(attr, old, new):
     myMessage="you just entered: {0}".format(new)
     text_output.text=myMessage # this changes the browser display
-    df1=df_final
+    df=df_final
     try:
-        df1=pd.eval("D={}".format(new), target=df1)   
+        df=pd.eval("D={}".format(new), target=df)   
         
-        print(df1["D"],"assign")
-    # pd.eval("D = df1['U(lambda)']**2 + df1['V(lambda)']**2", target=df_1)
-        src1.data["D"]=df1["D"]
+        print(df["D"],"assign")
+    # pd.eval("D = ,df['U(lambda)']**2 + df['V(lambda)']**2 target=df_1)
+        src1.data["D"]=df["D"]
         
         return src1
     except:
         print('error')
     
+
     
-text_input = TextInput(value="default", title="Enter a pd.eval compatible equation:")
+text_input = TextInput(value="default", title="Enter a pd.eval compatible equation (with df as the dataframe): Ex: (df['U(lambda)']**2 + df['V(lambda)']**2)**0.5")
 text_input.on_change("value",my_text_input_handler)
+
 
 layout = bokeh.layouts.column(text_input,text_output,figtemp)
 
 
 all = bl.column(iw.Tabs({"Visibility and domain":scatter,
-                         "Time Series": timeseries,"Equation editor":layout},
+                         "Custom plot w/ Default axes": timeseries,"Equation editor":layout},
                         width=1024))
 bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo 2"
