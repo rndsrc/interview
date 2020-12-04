@@ -106,6 +106,7 @@ for sites,color in uvfitscode_color.items():
              (df["T2"] == sites[1])),"colors"]=color
     
 df_final=pd.concat([df,mirror_uv(df)])
+df_final["D"]=np.nan
 src1 = bm.ColumnDataSource(df_final)
 fig.x_range.flipped= True
 plt1=fig.circle(x="U(lambda)", y="V(lambda)", color="colors",
@@ -167,20 +168,21 @@ figtemp = bp.figure(title="temp graph",
     "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
     output_backend="webgl")
 
+
+figtemp.circle(x="D", y="Iamp(Jy)", color="colors",
+                        source=src1, size=6)
+
 def my_text_input_handler(attr, old, new):
     myMessage="you just entered: {0}".format(new)
     text_output.text=myMessage # this changes the browser display
     df1=df_final
-    df1["D"] = np.nan
     try:
         df1=pd.eval("D={}".format(new), target=df1)   
-
-    # pd.eval("D = df1['U(lambda)']**2 + df1['V(lambda)'] **2", target=df_1)
-        src1=bm.ColumnDataSource(df1)
-        print(df1["D"])
         
-        figtemp.circle(x="D", y="Iamp(Jy)", color="colors",
-                        source=src1, size=6)
+        print(df1["D"],"assign")
+    # pd.eval("D = df1['U(lambda)']**2 + df1['V(lambda)']**2", target=df_1)
+        src1.data["D"]=df1["D"]
+        
         return src1
     except:
         print('error')
