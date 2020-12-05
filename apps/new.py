@@ -18,6 +18,15 @@ import ehtim as eh
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
+from bokeh.models import TextInput, Paragraph
+from bokeh.plotting import curdoc
+from bokeh.layouts import layout
+import bokeh.layouts
+
+from bokeh.layouts import widgetbox
+from bokeh.models import CustomJS, TextInput, Paragraph
+from bokeh.plotting import output_file, show
 def mirror_uv(df):
     """T1 <-> T2 => u, v -> -u, -v; amp  -> amp, phase -> -phase.
     Returns new array with the additive inverse of the phase, u, v
@@ -45,6 +54,11 @@ for root, dirs, files in os.walk('./uvfitsfiles'):
     for file in files:
         if file.endswith('.uvfits'):
             file_list.append(os.path.join(root, file))
+
+
+
+
+
             
 
 
@@ -64,6 +78,7 @@ for title in csv_fields:
         tool_tips_list.append((title,"@"+"{"+title+"}"))
     else:
         tool_tips_list.append((title,"@"+title))
+tool_tips_list.append(("Custom","@D"))
 hover = bm.HoverTool(tooltips=tool_tips_list)
 fig = bp.figure(title="u vs v graph",
     plot_height=800, plot_width=800
@@ -76,7 +91,7 @@ fig2 = bp.figure(title="r vs Y",
     ,x_axis_label="r",y_axis_label= "Y value",
     toolbar_location="right", tools=[hover,
     "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
-    output_backend="webgl")
+    output_backend="webgl",y_axis_type="log")
     
 fig3 = bp.figure(title="Time Series",
     plot_height=1600, plot_width=1600
@@ -87,9 +102,12 @@ fig3 = bp.figure(title="Time Series",
 fig3.sizing_mode = 'scale_both'
 df=df.assign(colors="black")
 for sites,color in uvfitscode_color.items():
-    df.loc[((df["T1"] == sites[0]) | (df["T1"] == sites[1])) & ((df["T2"] == sites[0]) | (df["T2"] == sites[1])),"colors"]=color
+    df.loc[((df["T1"] == sites[0]) | \
+        (df["T1"] == sites[1])) & ((df["T2"] == sites[0]) |\
+             (df["T2"] == sites[1])),"colors"]=color
     
 df_final=pd.concat([df,mirror_uv(df)])
+df_final["D"]=np.nan
 src1 = bm.ColumnDataSource(df_final)
 fig.x_range.flipped= True
 plt1=fig.circle(x="U(lambda)", y="V(lambda)", color="colors",
@@ -115,7 +133,8 @@ opts_all={
     "V(lambda)": "v",
     "Iamp(Jy)": "Amplitude",        
     "Iphase(d)"   : "Phase",
-    "sqrtu2v2": "r"
+    "sqrtu2v2": "r",
+    "D": "custom"
 }
 
 
@@ -139,12 +158,48 @@ select_y3  = iw.Select(plt3, 'y', opts_all)
 inputs3  = bm.Column(btn,select_x3, select_y3)
 timeseries= bl.row(inputs3, fig3,)
 
+myMessage = 'Enter an equation'
+text_output = Paragraph(text=myMessage, width=200, height=100)
+
+
+figtemp = bp.figure(title="temp graph",
+    plot_height=800, plot_width=800
+    ,x_axis_label="D",y_axis_label= "Phase",
+    toolbar_location="right", tools=[hover,
+    "pan,box_zoom,box_select,lasso_select,undo,redo,reset,save"],
+    output_backend="webgl")
+
+
+figtemp.circle(x="D", y="Iamp(Jy)", color="colors",
+                        source=src1, size=6)
+
+def my_text_input_handler(attr, old, new):
+    myMessage="you just entered: {0}".format(new)
+    text_output.text=myMessage # this changes the browser display
+    df=df_final
+    try:
+        df=pd.eval("D={}".format(new), target=df)   
+        
+        print(df["D"],"assign")
+    # pd.eval("D = ,df['U(lambda)']**2 + df['V(lambda)']**2 target=df_1)
+        src1.data["D"]=df["D"]
+        
+        return src1
+    except:
+        print('error')
+    
+
+    
+text_input = TextInput(value="default", title="Enter a pd.eval compatible equation (with df as the dataframe): Ex: (df['U(lambda)']**2 + df['V(lambda)']**2)**0.5")
+text_input.on_change("value",my_text_input_handler)
+
+
+layout = bokeh.layouts.column(text_input,text_output,figtemp)
+
 
 all = bl.column(iw.Tabs({"Visibility and domain":scatter,
-                         "Time Series": timeseries},
+                         "Custom plot w/ Default axes": timeseries,"Equation editor":layout},
                         width=1024))
 bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo 2"
 
-
-bm.Glyph()

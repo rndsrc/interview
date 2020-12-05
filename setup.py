@@ -23,17 +23,17 @@ except ImportError:
 
 setup(
     name    = "interview",
-    version = "0.0a0",
+    version = "0.0b0",
 
     description      = "Interview: an interactive data viewing and inspecting framework",
     long_description = "Interview is an interactive data viewing and inspecting framework for the Event Horizon Telescope.",
 
-    author       = "Chi-kwan Chan",
-    author_email = "ckchan@cfa.harvard.edu",
+    author       = "Phani Datta Velicheti,Chi-kwan Chan",
+    author_email = "[phaniv@email.arizona.edu","ckchan@cfa.harvard.edu"],
     license      = "GPLv3+",
-    url          = "https://github.com/chanchikwan/interview",
-    classifiers  = [
-        "Development Status :: 1 - Planning",
+    url          = "https://github.com/phanicode/interview,https://github.com/rndsrc/interview",
+    classifiers  = [,
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",

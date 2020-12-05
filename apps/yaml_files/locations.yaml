@@ -27,7 +27,7 @@
 ? !!python/tuple [AZ, PV]
 : slateblue
 ? !!python/tuple [AZ, SM]
-: slateblue
+: salmon
 ? !!python/tuple [JC, LM]
 : peachpuff
 ? !!python/tuple [JC, PV]
@@ -40,4 +40,20 @@
 : darkcyan
 ? !!python/tuple [PV, SM]
 : lime
+? !!python/tuple [PV, SP]
+: peru
+? !!python/tuple [LM, SP]
+: teal
+? !!python/tuple [JC, SP]
+: violet
+? !!python/tuple [LM, SP]
+: mediumspringgreen
+? !!python/tuple [SM, SP]
+: darkmagenta
+? !!python/tuple [AZ, SP]
+: gold
+? !!python/tuple [AP, SP]
+: indianred
+? !!python/tuple [AA, SP]
+: indigo
 
