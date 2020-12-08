@@ -28,11 +28,11 @@ setup(
     description      = "Interview: an interactive data viewing and inspecting framework",
     long_description = "Interview is an interactive data viewing and inspecting framework for the Event Horizon Telescope.",
 
-    author       = "Phani Datta Velicheti,Chi-kwan Chan",
-    author_email = "[phaniv@email.arizona.edu","ckchan@cfa.harvard.edu"],
+    author       = "Phani Datta Velicheti, Chi-kwan Chan",
+    author_email = "phaniv@email.arizona.edu, chanc@email.arizona.edu",
     license      = "GPLv3+",
     url          = "https://github.com/phanicode/interview,https://github.com/rndsrc/interview",
-    classifiers  = [,
+    classifiers  = [
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3",
