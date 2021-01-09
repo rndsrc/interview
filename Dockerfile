@@ -28,5 +28,5 @@ EXPOSE 80
 # Go to dockerhub cli or use docker execdocker exec -t -i interview:bokehapp /bin/bash
 # cd interview
 # cd apps
-# bokeh serve --allow-websocket-origin="*" --num-procs=4 ( can be changed) new.py
+# bokeh serve --allow-websocket-origin="*" --num-procs=4 (max no of processes) new.py
 
