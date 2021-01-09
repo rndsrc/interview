@@ -25,7 +25,8 @@ RUN pip install --upgrade pip && \
 EXPOSE 5006
 EXPOSE 80
 
-CMD bokeh serve \
-    --allow-websocket-origin="*" \
-    --num-procs=${NUM_PROCS} \
-    interview/apps/new.py
+# Go to dockerhub cli or use docker execdocker exec -t -i interview:bokehapp /bin/bash
+# cd interview
+# cd apps
+# bokeh serve --allow-websocket-origin="*" --num-procs=4 ( can be changed) new.py
+
