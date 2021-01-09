@@ -2,9 +2,8 @@
 
 from bokeh.models.layouts import Panel, Row, Tabs
 from bokeh.models.widgets.buttons import Button
-
-import interview.widget.select as Select
-
+import bokeh.models.widgets as bw
+import seaborn as sns
 import os
 import pandas as pd
 import numpy  as np
@@ -12,12 +11,14 @@ import bokeh.layouts        as bl
 import bokeh.models         as bm
 import bokeh.plotting       as bp
 import os
-import interview.widget as iw
 import yaml
 import ehtim as eh
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import bokeh.plotting       as bp
+import bokeh.models.widgets as bw
+import bokeh.models.layouts as bml
 
 from bokeh.models import TextInput, Paragraph
 from bokeh.plotting import curdoc
@@ -56,11 +57,71 @@ for root, dirs, files in os.walk('./uvfitsfiles'):
             file_list.append(os.path.join(root, file))
 
 
+# define interaction
+def print_datapoints():
+    indices=src1.selected.indices
+    results=df_final.iloc[indices, :-1]
+    results.to_csv("temp.csv", mode='a', header=False)
 
+def Select(ps, a, opts, backend="python"):
+    """Create a selector with callback for plots "ps" with glyph attribute "a"
+    Args:
+        ps:      a list of plots
+        a:       glyph attribute
+        opts:    a dictionary where the keys are data source columns and
+            values are selector labels.
+        backend: choose callback backend; the only supported backend is
+            "python"
+    Returns:
+        An instance of Bokeh Select
+    Examples:
+        >>> import interview as iv
+        >>> ...
+        >>> plt = fig.circle(...)
+        >>> sel = iv.widget.Select(plt, 'x', opts)
+    """
+    
+
+    if not isinstance(ps, list):
+        ps = [ps]
+
+    s = bw.Select(title  =a.upper()+" Axis",
+                  options=list(opts.values()),
+                  value  =opts[getattr(ps[0].glyph, a)])
+
+    if backend == "python":
+        def callback(attr, old, new):
+            for p in ps:
+                setattr(p.glyph, a,
+                        list(opts.keys())[list(opts.values()).index(new)])
+        s.on_change("value", callback)
+    else:
+        raise ValueError('the only supported backend is "python"')
+
+    return s
 
 
             
-
+def Tabs(obj, **kwargs):
+    """Convert a nested (ordered) dictionary to a Bokeh tabs widget
+    Args:
+        obj: a nested (ordered) dictionary where the keys are tab
+            titles and the values are children of panels
+    Returns:
+        An instance of Bokeh Tabs
+    Examples:
+        >>> import bokeh.plotting as bp
+        >>> import interview as iv
+        >>> fig = bp.figure()
+        >>> bp.show(iv.widget.Tabs({'title':fig}))
+    """
+    if   isinstance(obj, bp.Figure) or isinstance(obj, bml.LayoutDOM):
+        return obj
+    elif isinstance(obj, dict):
+        return bw.Tabs(tabs=[bw.Panel(child=Tabs(v, **kwargs), title=k)
+                             for k, v in obj.items()], **kwargs)
+    else:
+        raise ValueError("Input must be a dictionary or a Bokeh figure")
 
 df = pd.concat( map (lambda file : pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
 unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']))\
@@ -116,7 +177,7 @@ plt2=fig2.circle(x="sqrtu2v2",y="Iamp(Jy)" ,\
         color="colors",source=src1, size=6)
 plt3=fig3.circle(x="time(UTC)",y="Iamp(Jy)" ,\
         color="colors",source=src1, size=6)
-        
+
 selected_circle = bm.Circle(fill_alpha=1, fill_color="firebrick")
 plt1.selection_glyph=selected_circle
 
@@ -138,23 +199,19 @@ opts_all={
 }
 
 
-# define interaction
-def print_datapoints():
-    indices=src1.selected.indices
-    results=df_final.iloc[indices, :-1]
-    results.to_csv("temp.csv", mode='a', header=False)
+
 
 btn = Button(label='Write selected points to CSV', button_type='success')
 btn.on_click(print_datapoints)
 
-select_x1  = iw.Select(plt1, 'x', opts_all)
-select_y1  = iw.Select(plt1, 'y', opts_all)
+select_x1  = Select(plt1, 'x', opts_all)
+select_y1  = Select(plt1, 'y', opts_all)
 
 inputs1  = bm.Column(btn,select_x1, select_y1)
-select_y2  = iw.Select(plt2, 'y', opts_all)
+select_y2  = Select(plt2, 'y', opts_all)
 scatter = bl.row(inputs1, fig,select_y2,fig2)
-select_x3  = iw.Select(plt3, 'x', opts_all)
-select_y3  = iw.Select(plt3, 'y', opts_all)
+select_x3  = Select(plt3, 'x', opts_all)
+select_y3  = Select(plt3, 'y', opts_all)
 inputs3  = bm.Column(btn,select_x3, select_y3)
 timeseries= bl.row(inputs3, fig3,)
 
@@ -197,7 +254,7 @@ text_input.on_change("value",my_text_input_handler)
 layout = bokeh.layouts.column(text_input,text_output,figtemp)
 
 
-all = bl.column(iw.Tabs({"Visibility and domain":scatter,
+all = bl.column(Tabs({"Visibility and domain":scatter,
                          "Custom plot w/ Default axes": timeseries,"Equation editor":layout},
                         width=1024))
 bp.curdoc().add_root(all)
