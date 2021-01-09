@@ -9,8 +9,8 @@ RUN git clone --branch eq_editor_alpha https://github.com/phanicode/interview.gi
 COPY requirements.txt ./
 
 RUN conda config --append channels bokeh
-RUN conda install --yes python=${PY_VERSION} jinja2 bokeh=${BK_VERSION} numpy ephem seaborn matplotlib  scipy sympy "nodejs>=8.8" pandas flask
-RUN conda install --yes pyyaml=5.3.1
+RUN conda install --yes python=${PY_VERSION} jinja2 bokeh=${BK_VERSION} numpy ephem seaborn matplotlib  scipy sympy "nodejs>=8.8"  pandas flask pyyaml=5.3.1
+
 RUN conda clean -ay
 
 
