@@ -31,6 +31,10 @@ docker build --tag interview:bokehapp .
 Execute the command to start the Docker container:
 ```
 docker run --rm -p 5006:5006 -it interview:bokehapp
+Go to dockerhub cli or use docker exec (docker exec -t -i interview:bokehapp /bin/bash)
+cd interview
+cd apps
+bokeh serve --allow-websocket-origin="*" --num-procs=4 (max no of processes) new.py
 ```
 Now navigate to ``http://localhost:5006`` to interact with the demo site. 
 
