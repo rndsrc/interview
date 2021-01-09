@@ -15,7 +15,7 @@ Supported color list : https://docs.bokeh.org/en/latest/docs/reference/colors.ht
 
 Clone this repository:
 ```
-git clone https://github.com/bokeh/demo.bokeh.org.git
+git clone https://rndsrc/interview.git
 ```
 and [install Docker](https://docs.docker.com/install/) on your platform
 
@@ -23,7 +23,7 @@ and [install Docker](https://docs.docker.com/install/) on your platform
 
 In the top level of this repository, execute the command
 ```
-docker build --tag demo.bokeh.org .
+docker build --tag interview:bokehapp .
 ```
 
 ### Running
