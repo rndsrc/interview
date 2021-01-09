@@ -5,11 +5,6 @@ ENV NUM_PROCS=4
 ENV BOKEH_RESOURCES=cdn
 
 RUN apt-get install git bash
-
-RUN git clone --branch $BK_VERSION https://github.com/bokeh/bokeh.git /bokeh
-
-
-
 RUN git clone --branch eq_editor_alpha https://github.com/phanicode/interview.git
 COPY requirements.txt ./
 
