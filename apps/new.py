@@ -22,6 +22,8 @@ from bokeh.models import TextInput, Paragraph
 from bokeh.plotting import curdoc
 from bokeh.layouts import layout
 import bokeh.layouts
+from bokeh.events import ButtonClick
+import sys
 
 
 def mirror_uv(df):
@@ -46,19 +48,10 @@ def mirror_uv(df):
 
 csv_fields = [a.strip() for a in """time(UTC),T1,T2,U(lambda),
 V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
-file_list = []
-for root, dirs, files in os.walk('./uvfitsfiles'):
-    for file in files:
-        if file.endswith('.uvfits'):
-            file_list.append(os.path.join(root, file))
+file_list = [sys.argv[1]]
 
 
 # define interaction
-def print_datapoints():
-    indices = src1.selected.indices
-    results = df_final.iloc[indices, :-1]
-    results.to_csv("temp.csv", mode='a', header=False)
-
 # Moved select and Tabs here from .io to avoid import errors in DockerFile.
 # eq_editor branch contains cleaner code that does not support dockerization
 # and concurrent servers.
@@ -124,9 +117,10 @@ def Tabs(obj, **kwargs):
 
 
 # Loading the dataframe
-df = pd.concat(map(lambda file: pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
-                                             unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma'])), file_list))
-# defining r
+df = pd.read_csv(file_list[0])
+# defining r]
+df.columns=['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']
+
 df['r'] = np.sqrt(df.u**2 + df.v**2)
 
 # setting fields.
@@ -201,19 +195,74 @@ opts_all = {
     "D": "custom"
 }
 
+# Equation editor
 
-btn = Button(label='Write selected points to CSV', button_type='success')
-btn.on_click(print_datapoints)
+
+def my_text_input_handler(attr, old, new):
+    myMessage = "you just entered: {0}".format(new)
+    text_output.text = myMessage  # this changes the browser display
+    df = df_final
+    try:
+        df=pd.eval("D={}".format(new), target=df)
+
+        print(df["D"], "assign")
+    # Example:pd.eval("D = ,df['U(lambda)']**2 + df['V(lambda)']**2 target=df_1)
+        src1.data["D"] = df["D"]
+
+        return src1
+    except:
+        print('error')
+
+
+text_input = TextInput(
+    value="default", title="Enter a pd.eval compatible equation (with df as the dataframe): Ex: (df['U(lambda)']**2 + df['V(lambda)']**2)**0.5")
+text_input.on_change("value", my_text_input_handler)
+
+
+savebutton = Button(label="Save as csv", button_type="success")
+savebutton.js_on_event(ButtonClick, bm.CustomJS(
+    args=dict(source_data=src1),
+    code="""
+        var inds = source_data.selected.indices;
+        var data = source_data.data;
+        var out = "time(UTC),T1,T2,U(lambda),V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2,Custom\\n";
+        for (var i = 0; i < inds.length; i++) {
+            
+            out+=data['time(UTC)'][inds[i]]+',';
+            out+=data['T1'][inds[i]]+',';
+            out+=data['T2'][inds[i]]+',';
+            out+=data['U(lambda)'][inds[i]]+',';
+            out+=data['V(lambda)'][inds[i]]+',';
+            out+=data['Iamp(Jy)'][inds[i]]+',';
+            out+=data['Iphase(d)'][inds[i]]+',';
+            out+=data['Isigma(Jy)'][inds[i]]+',';
+            out+=data['sqrtu2v2'][inds[i]]+',';
+            out+=data['D'][inds[i]]+"\\n";
+            
+            
+        }
+        var file = new Blob([out], {type: 'text/plain'});
+        var elem = window.document.createElement('a');
+        elem.href = window.URL.createObjectURL(file);
+        elem.download = 'selected-data.csv';
+        document.body.appendChild(elem);
+        elem.click();
+        document.body.removeChild(elem);
+        """
+        )
+                         )
+                        
+
 # Selection layouts.
 select_x1 = Select(plt1, 'x', opts_all)
 select_y1 = Select(plt1, 'y', opts_all)
 
-inputs1 = bm.Column(btn, select_x1, select_y1)
+inputs1 = bm.Column(savebutton, select_x1, select_y1)
 select_y2 = Select(plt2, 'y', opts_all)
 scatter = bl.row(inputs1, fig, select_y2, fig2)
 select_x3 = Select(plt3, 'x', opts_all)
 select_y3 = Select(plt3, 'y', opts_all)
-inputs3 = bm.Column(btn, select_x3, select_y3)
+inputs3 = bm.Column(savebutton, select_x3, select_y3)
 timeseries = bl.row(inputs3, fig3,)
 
 myMessage = 'Enter an equation'
@@ -230,28 +279,6 @@ figtemp = bp.figure(title="temp graph",
 figtemp.circle(x="D", y="Iamp(Jy)", color="colors",
                         source=src1, size=6)
 
-# Equation editor
-
-
-def my_text_input_handler(attr, old, new):
-    myMessage = "you just entered: {0}".format(new)
-    text_output.text = myMessage  # this changes the browser display
-    df = df_final
-    try:
-        df = pd.eval("D={}".format(new), target=df)
-
-        print(df["D"], "assign")
-    # Example:pd.eval("D = ,df['U(lambda)']**2 + df['V(lambda)']**2 target=df_1)
-        src1.data["D"] = df["D"]
-
-        return src1
-    except:
-        print('error')
-
-
-text_input = TextInput(
-    value="default", title="Enter a pd.eval compatible equation (with df as the dataframe): Ex: (df['U(lambda)']**2 + df['V(lambda)']**2)**0.5")
-text_input.on_change("value", my_text_input_handler)
 
 
 layout = bokeh.layouts.column(text_input, text_output, figtemp)
@@ -260,5 +287,8 @@ layout = bokeh.layouts.column(text_input, text_output, figtemp)
 all = bl.column(Tabs({"Visibility and domain": scatter,
                       "Custom plot w/ Default axes": timeseries, "Equation editor": layout},
                      width=1024))
+
+
+
 bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo 2"
