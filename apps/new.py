@@ -23,7 +23,10 @@ from bokeh.plotting import curdoc
 from bokeh.layouts import layout
 import bokeh.layouts
 from bokeh.events import ButtonClick
+<<<<<<< HEAD
 import sys
+=======
+>>>>>>> e9960e1f38358a671b1b3931bb61d865332a8622
 
 
 def mirror_uv(df):
@@ -219,7 +222,11 @@ text_input = TextInput(
 text_input.on_change("value", my_text_input_handler)
 
 
+<<<<<<< HEAD
 savebutton = Button(label="Save as csv", button_type="success")
+=======
+savebutton = Button(label="Save as CSV", button_type="success")
+>>>>>>> e9960e1f38358a671b1b3931bb61d865332a8622
 savebutton.js_on_event(ButtonClick, bm.CustomJS(
     args=dict(source_data=src1),
     code="""
