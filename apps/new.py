@@ -23,10 +23,7 @@ from bokeh.plotting import curdoc
 from bokeh.layouts import layout
 import bokeh.layouts
 from bokeh.events import ButtonClick
-<<<<<<< HEAD
 import sys
-=======
->>>>>>> e9960e1f38358a671b1b3931bb61d865332a8622
 
 
 def mirror_uv(df):
