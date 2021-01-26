@@ -30,7 +30,7 @@ docker build --tag interview:bokehapp .
 
 Execute the command to start the Docker container:
 ```
-docker run --rm -p 5006:5006 -it interview:bokehapp
+docker run --rm -p 5006:5006 -it interview:interviewdocker
 Go to dockerhub cli or use docker exec (docker exec -t -i interview:bokehapp /bin/bash)
 cd interview
 cd apps
