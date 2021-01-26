@@ -23,7 +23,7 @@ and [install Docker](https://docs.docker.com/install/) on your platform
 
 In the top level of this repository, execute the command
 ```
-docker build --tag interview:bokehapp .
+docker build --tag interview:interviewdocker .
 ```
 
 ### Running
