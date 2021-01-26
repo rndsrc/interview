@@ -1,6 +1,7 @@
 # bokeh serve --show new.py or python demo2.py ( both run bokeh servers)
 #
 from bokeh.models.layouts import Panel, Row, Tabs
+from bokeh.models.sources import ColumnDataSource
 from bokeh.models.widgets.buttons import Button
 import bokeh.models.widgets as bw
 import os
@@ -23,7 +24,19 @@ from bokeh.plotting import curdoc
 from bokeh.layouts import layout
 import bokeh.layouts
 from bokeh.events import ButtonClick
-import sys
+
+from bokeh.models.widgets import FileInput
+from pybase64 import b64decode
+import io
+#############
+src2=ColumnDataSource()
+
+csv_fields = [a.strip() for a in """time(UTC),T1,T2,U(lambda),
+    V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy)""".split(',')]
+
+
+
+##############
 
 
 def mirror_uv(df):
@@ -48,7 +61,7 @@ def mirror_uv(df):
 
 csv_fields = [a.strip() for a in """time(UTC),T1,T2,U(lambda),
 V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
-file_list = [sys.argv[1]]
+file_list = ["a.uvfits"]
 
 
 # define interaction
@@ -116,8 +129,8 @@ def Tabs(obj, **kwargs):
         raise ValueError("Input must be a dictionary or a Bokeh figure")
 
 
-# Loading the dataframe
-df = pd.read_csv(file_list[0])
+df = pd.concat(map(lambda file: pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
+                                             unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma'])), file_list))
 # defining r]
 df.columns=['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']
 
@@ -158,6 +171,7 @@ fig3 = bp.figure(title="Time Series",
                  output_backend="webgl")
 fig3.sizing_mode = 'scale_both'
 # color assignment. new2.py supports new stations.
+
 df = df.assign(colors="black")
 for sites, color in uvfitscode_color.items():
     df.loc[((df["T1"] == sites[0]) |
@@ -168,6 +182,20 @@ df_final = pd.concat([df, mirror_uv(df)])
 df_final["D"] = np.nan
 src1 = bm.ColumnDataSource(df_final)
 fig.x_range.flipped = True
+opts_all = {
+    "time(UTC)": "time",
+    "T1": "Site 1",
+    "T2": "Site 2",
+    "U(lambda)": "u",
+    "V(lambda)": "v",
+    "Iamp(Jy)": "Amplitude",
+    "Iphase(d)": "Phase",
+    "sqrtu2v2": "r",
+    "D": "custom"
+}
+for key,value in opts_all.items():
+    src1.data[key]=[]
+
 plt1 = fig.circle(x="U(lambda)", y="V(lambda)", color="colors",
                   source=src1, size=6)
 plt2 = fig2.circle(x="sqrtu2v2", y="Iamp(Jy)",
@@ -183,17 +211,7 @@ plt3.selection_glyph = selected_circle
 plt2.selection_glyph = selected_circle
 
 # options list
-opts_all = {
-    "time(UTC)": "time",
-    "T1": "Site 1",
-    "T2": "Site 2",
-    "U(lambda)": "u",
-    "V(lambda)": "v",
-    "Iamp(Jy)": "Amplitude",
-    "Iphase(d)": "Phase",
-    "sqrtu2v2": "r",
-    "D": "custom"
-}
+
 
 # Equation editor
 
@@ -252,12 +270,75 @@ savebutton.js_on_event(ButtonClick, bm.CustomJS(
         )
                          )
                         
+def process_uvfits_data(attr, old,new):
+    new_list=[]
+    for file in new:
+        f = io.BytesIO(b64decode(file))
+        new_list.append(f)
+    df_2 = pd.concat(map(lambda file: pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=600).unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma'])), new_list))
+    df_2['r'] = np.sqrt(df_2.u**2 + df_2.v**2)
+    df_2.columns = csv_fields
+    df_2 = df_2.assign(colors="black")
+    for sites, color in uvfitscode_color.items():
+        df_2.loc[((df_2["T1"] == sites[0]) |
+                (df_2["T1"] == sites[1])) & ((df_2["T2"] == sites[0]) |
+                                        (df_2["T2"] == sites[1])), "colors"] = color
+
+    df_final_2 = pd.concat([df_2, mirror_uv(df_2)])
+    df_final_2["D"]=np.nan
+    source_dict=df_final_2.to_dict("list")
+    src1.data=source_dict
+
+    
+
+    
+    
+
+
+
+
+        
+
+
+
+
+def upload_regular_data(attr, old, new):
+    new_list=[]
+    for file in new:
+        f = io.BytesIO(b64decode(file))
+        new_list.append(f) 
+    df_2 = pd.concat(\
+        map(lambda file: pd.read_csv(file,names=csv_fields,skiprows=2),new_list))
+    df_2['r'] = np.sqrt(df_2.u**2 + df_2.v**2)
+    df_2.columns = csv_fields
+    df_2 = df_2.assign(colors="black")
+    for sites, color in uvfitscode_color.items():
+        df_2.loc[((df_2["T1"] == sites[0]) |
+                (df_2["T1"] == sites[1])) & ((df_2["T2"] == sites[0]) |
+                                        (df_2["T2"] == sites[1])), "colors"] = color
+    df_final_2 = pd.concat([df_2, mirror_uv(df_2)])
+    df_final_2["D"]=np.nan
+    source_dict=df_final_2.to_dict("list")
+    src1.data=source_dict
+
+
+
+file_input = FileInput(accept=".csv,.json,.txt,.pdf,.xls,.uvfits,.v6", multiple=True)
+file_input.on_change('value', upload_regular_data)
+genericp=Paragraph(text="Use this button to choose csv files")
+
+uvfits_input=FileInput(accept=".uvfits", multiple=True)
+uvfits_input.on_change('value', process_uvfits_data)
+uvfitsp=Paragraph(text="Use this button to choose uvfits files")
+
+
+bokCol=bokeh.models.Column(uvfitsp,uvfits_input,genericp,file_input)
 
 # Selection layouts.
 select_x1 = Select(plt1, 'x', opts_all)
 select_y1 = Select(plt1, 'y', opts_all)
 
-inputs1 = bm.Column(savebutton, select_x1, select_y1)
+inputs1 = bm.Column(bokCol,savebutton, select_x1, select_y1)
 select_y2 = Select(plt2, 'y', opts_all)
 scatter = bl.row(inputs1, fig, select_y2, fig2)
 select_x3 = Select(plt3, 'x', opts_all)
