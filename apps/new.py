@@ -218,8 +218,8 @@ plt2.selection_glyph = selected_circle
 
 def my_text_input_handler(attr, old, new):
     myMessage = "you just entered: {0}".format(new)
-    text_output.text = myMessage  # this changes the browser display
-    df = df_final
+    text_output.text = myMessage
+    global df  # this changes the browser display
     try:
         df=pd.eval("D={}".format(new), target=df)
 
@@ -259,8 +259,7 @@ savebutton.js_on_event(ButtonClick, bm.CustomJS(
             
             
         }
-        var file = new Blob([out], {type: 'text/plain'});
-        var elem = window.document.createElement('a');
+        var file = new Blob([out], {type: 'text/plain'});        var elem = window.document.createElement('a');
         elem.href = window.URL.createObjectURL(file);
         elem.download = 'selected-data.csv';
         document.body.appendChild(elem);
@@ -288,6 +287,9 @@ def process_uvfits_data(attr, old,new):
     df_final_2["D"]=np.nan
     source_dict=df_final_2.to_dict("list")
     src1.data=source_dict
+    global df
+    df= df_final_2
+
 
     
 
