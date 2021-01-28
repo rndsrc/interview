@@ -274,7 +274,7 @@ def process_uvfits_data(attr, old,new):
     for file in new:
         f = io.BytesIO(b64decode(file))
         new_list.append(f)
-    df_2 = pd.concat(map(lambda file: pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=600).unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma'])), new_list))
+    df_2 = pd.concat(map(lambda file: pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma'])), new_list))
     df_2['r'] = np.sqrt(df_2.u**2 + df_2.v**2)
     df_2.columns = csv_fields
     df_2 = df_2.assign(colors="black")
@@ -291,50 +291,16 @@ def process_uvfits_data(attr, old,new):
     df= df_final_2
 
 
-    
-
-    
-    
 
 
 
-
-        
-
-
-
-
-def upload_regular_data(attr, old, new):
-    new_list=[]
-    for file in new:
-        f = io.BytesIO(b64decode(file))
-        new_list.append(f) 
-    df_2 = pd.concat(\
-        map(lambda file: pd.read_csv(file,names=csv_fields,skiprows=2),new_list))
-    df_2['r'] = np.sqrt(df_2.u**2 + df_2.v**2)
-    df_2.columns = csv_fields
-    df_2 = df_2.assign(colors="black")
-    for sites, color in uvfitscode_color.items():
-        df_2.loc[((df_2["T1"] == sites[0]) |
-                (df_2["T1"] == sites[1])) & ((df_2["T2"] == sites[0]) |
-                                        (df_2["T2"] == sites[1])), "colors"] = color
-    df_final_2 = pd.concat([df_2, mirror_uv(df_2)])
-    df_final_2["D"]=np.nan
-    source_dict=df_final_2.to_dict("list")
-    src1.data=source_dict
-
-
-
-file_input = FileInput(accept=".csv,.json,.txt,.pdf,.xls,.uvfits,.v6", multiple=True)
-file_input.on_change('value', upload_regular_data)
-genericp=Paragraph(text="Use this button to choose csv files")
 
 uvfits_input=FileInput(accept=".uvfits", multiple=True)
 uvfits_input.on_change('value', process_uvfits_data)
 uvfitsp=Paragraph(text="Use this button to choose uvfits files")
 
 
-bokCol=bokeh.models.Column(uvfitsp,uvfits_input,genericp,file_input)
+bokCol=bokeh.models.Column(uvfitsp,uvfits_input)
 
 # Selection layouts.
 select_x1 = Select(plt1, 'x', opts_all)
