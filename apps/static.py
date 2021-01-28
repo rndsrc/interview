@@ -1,49 +1,34 @@
-#!/usr/bin/env python
-#
-# A minimal static HTML Bokeh demo.  Run this app with `./static.py`
-# or `python static.py`---this will save and open a static HTML file
-# "static.html".
+from bokeh.io import curdoc
+from bokeh.models.widgets import FileInput
+from pybase64 import b64decode
+import pandas as pd
+import io
+import ehtim as eh
 
-import bokeh.models   as bm
-import bokeh.plotting as bp
+def upload_fit_data(attr, old, new):
+    print(new)
+    process_list(new)
 
-from eat.io import hops, util
+def process_uvfits_data(attr, old,new):
+    file_list=[]
+    for file in new:
+        f = io.BytesIO(b64decode(file)
+        file_list.append(f)
+    df = pd.concat(map(lambda file: pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma'])), file_list))
+    
 
-#------------------------------------------------------------------------------
-# TODO: load both HOPS and AIPS data into Pandas DataFrames
-df = hops.read_alist("er1/hops-lo/5.+close/data/alist.v6")
+def process_list(file_list):
+    for file in file_list:
+        decoded = b64decode(file)
+        f = io.BytesIO(decoded)
+        new_df = pd.read_csv(f)
+        print(new_df)
 
-# TODO: df['ampdiff'] = hops_amp - aips_amp
-df['ampdiff'] = df['snr']
+file_input = FileInput(accept=".csv,.json,.txt,.pdf,.xls,.uvfits,.v6", multiple=True)
+file_input.on_change('value', upload_fit_data)
 
-# Add other useful columns
-util.add_path(df)
+uvfits_input=FileInput(accept=".uvfits", multiple=True)
+uvfits_input.on_change('value', process_uvfits_data)
 
-df['site1'] = df.baseline.str[0]
-df['site2'] = df.baseline.str[1]
-
-cmap = {'3C279' : "red",
-        'OJ287' : "green",
-        'others': "blue"}
-df['color'] = df.apply(lambda r: cmap.get(r['source'], cmap['others']), axis=1)
-
-# Create hover tool with some useful information
-hover = bm.HoverTool(tooltips=[
-    ("Baseline", "@site1 @site2"),
-    ("(u,v)",    "(@u, @v)"),
-    ("Path",     "@path"),
-])
-
-# only include useful columns to reduce html size
-src = bm.ColumnDataSource(data=df[['amp', 'ampdiff', 'color',
-                                   'site1', 'site2', 'u', 'v', 'path']])
-
-#------------------------------------------------------------------------------
-# Make scatter plot
-fig = bp.figure(tools=[hover,"pan,box_zoom,reset"])
-plt = fig.circle(x="amp", y="ampdiff", color="color", source=src)
-
-#------------------------------------------------------------------------------
-# Output and show static HTML
-bp.output_file("static.html")
-bp.show(fig)
+doc=curdoc()
+doc.add_root(uvfits_input)

@@ -1,7 +1,6 @@
 # bokeh serve --show new.py or python demo2.py ( both run bokeh servers)
 #
 from bokeh.models.layouts import Panel, Row, Tabs
-from bokeh.models.sources import ColumnDataSource
 from bokeh.models.widgets.buttons import Button
 import bokeh.models.widgets as bw
 import os
@@ -23,20 +22,6 @@ from bokeh.models import TextInput, Paragraph
 from bokeh.plotting import curdoc
 from bokeh.layouts import layout
 import bokeh.layouts
-from bokeh.events import ButtonClick
-
-from bokeh.models.widgets import FileInput
-from pybase64 import b64decode
-import io
-#############
-src2=ColumnDataSource()
-
-csv_fields = [a.strip() for a in """time(UTC),T1,T2,U(lambda),
-    V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy)""".split(',')]
-
-
-
-##############
 
 
 def mirror_uv(df):
@@ -61,10 +46,19 @@ def mirror_uv(df):
 
 csv_fields = [a.strip() for a in """time(UTC),T1,T2,U(lambda),
 V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2""".split(',')]
-file_list = ["a.uvfits"]
+file_list = []
+for root, dirs, files in os.walk('./uvfitsfiles'):
+    for file in files:
+        if file.endswith('.uvfits'):
+            file_list.append(os.path.join(root, file))
 
 
 # define interaction
+def print_datapoints():
+    indices = src1.selected.indices
+    results = df_final.iloc[indices, :-1]
+    results.to_csv("temp.csv", mode='a', header=False)
+
 # Moved select and Tabs here from .io to avoid import errors in DockerFile.
 # eq_editor branch contains cleaner code that does not support dockerization
 # and concurrent servers.
@@ -129,11 +123,10 @@ def Tabs(obj, **kwargs):
         raise ValueError("Input must be a dictionary or a Bokeh figure")
 
 
+# Loading the dataframe
 df = pd.concat(map(lambda file: pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).
                                              unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma'])), file_list))
-# defining r]
-df.columns=['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma']
-
+# defining r
 df['r'] = np.sqrt(df.u**2 + df.v**2)
 
 # setting fields.
@@ -171,7 +164,6 @@ fig3 = bp.figure(title="Time Series",
                  output_backend="webgl")
 fig3.sizing_mode = 'scale_both'
 # color assignment. new2.py supports new stations.
-
 df = df.assign(colors="black")
 for sites, color in uvfitscode_color.items():
     df.loc[((df["T1"] == sites[0]) |
@@ -182,20 +174,6 @@ df_final = pd.concat([df, mirror_uv(df)])
 df_final["D"] = np.nan
 src1 = bm.ColumnDataSource(df_final)
 fig.x_range.flipped = True
-opts_all = {
-    "time(UTC)": "time",
-    "T1": "Site 1",
-    "T2": "Site 2",
-    "U(lambda)": "u",
-    "V(lambda)": "v",
-    "Iamp(Jy)": "Amplitude",
-    "Iphase(d)": "Phase",
-    "sqrtu2v2": "r",
-    "D": "custom"
-}
-for key,value in opts_all.items():
-    src1.data[key]=[]
-
 plt1 = fig.circle(x="U(lambda)", y="V(lambda)", color="colors",
                   source=src1, size=6)
 plt2 = fig2.circle(x="sqrtu2v2", y="Iamp(Jy)",
@@ -211,107 +189,31 @@ plt3.selection_glyph = selected_circle
 plt2.selection_glyph = selected_circle
 
 # options list
+opts_all = {
+    "time(UTC)": "time",
+    "T1": "Site 1",
+    "T2": "Site 2",
+    "U(lambda)": "u",
+    "V(lambda)": "v",
+    "Iamp(Jy)": "Amplitude",
+    "Iphase(d)": "Phase",
+    "sqrtu2v2": "r",
+    "D": "custom"
+}
 
 
-# Equation editor
-
-
-def my_text_input_handler(attr, old, new):
-    myMessage = "you just entered: {0}".format(new)
-    text_output.text = myMessage
-    global df  # this changes the browser display
-    try:
-        df=pd.eval("D={}".format(new), target=df)
-
-        print(df["D"], "assign")
-    # Example:pd.eval("D = ,df['U(lambda)']**2 + df['V(lambda)']**2 target=df_1)
-        src1.data["D"] = df["D"]
-
-        return src1
-    except:
-        print('error')
-
-
-text_input = TextInput(
-    value="default", title="Enter a pd.eval compatible equation (with df as the dataframe): Ex: (df['U(lambda)']**2 + df['V(lambda)']**2)**0.5")
-text_input.on_change("value", my_text_input_handler)
-
-
-savebutton = Button(label="Save as CSV", button_type="success")
-savebutton.js_on_event(ButtonClick, bm.CustomJS(
-    args=dict(source_data=src1),
-    code="""
-        var inds = source_data.selected.indices;
-        var data = source_data.data;
-        var out = "time(UTC),T1,T2,U(lambda),V(lambda),Iamp(Jy),Iphase(d),Isigma(Jy),sqrtu2v2,Custom\\n";
-        for (var i = 0; i < inds.length; i++) {
-            
-            out+=data['time(UTC)'][inds[i]]+',';
-            out+=data['T1'][inds[i]]+',';
-            out+=data['T2'][inds[i]]+',';
-            out+=data['U(lambda)'][inds[i]]+',';
-            out+=data['V(lambda)'][inds[i]]+',';
-            out+=data['Iamp(Jy)'][inds[i]]+',';
-            out+=data['Iphase(d)'][inds[i]]+',';
-            out+=data['Isigma(Jy)'][inds[i]]+',';
-            out+=data['sqrtu2v2'][inds[i]]+',';
-            out+=data['D'][inds[i]]+"\\n";
-            
-            
-        }
-        var file = new Blob([out], {type: 'text/plain'});        var elem = window.document.createElement('a');
-        elem.href = window.URL.createObjectURL(file);
-        elem.download = 'selected-data.csv';
-        document.body.appendChild(elem);
-        elem.click();
-        document.body.removeChild(elem);
-        """
-        )
-                         )
-                        
-def process_uvfits_data(attr, old,new):
-    new_list=[]
-    for file in new:
-        f = io.BytesIO(b64decode(file))
-        new_list.append(f)
-    df_2 = pd.concat(map(lambda file: pd.DataFrame(eh.obsdata.load_uvfits(file).avg_coherent(inttime=300).unpack(['time_utc', 't1', 't2', 'u', 'v', 'amp', 'phase', 'sigma'])), new_list))
-    df_2['r'] = np.sqrt(df_2.u**2 + df_2.v**2)
-    df_2.columns = csv_fields
-    df_2 = df_2.assign(colors="black")
-    for sites, color in uvfitscode_color.items():
-        df_2.loc[((df_2["T1"] == sites[0]) |
-                (df_2["T1"] == sites[1])) & ((df_2["T2"] == sites[0]) |
-                                        (df_2["T2"] == sites[1])), "colors"] = color
-
-    df_final_2 = pd.concat([df_2, mirror_uv(df_2)])
-    df_final_2["D"]=np.nan
-    source_dict=df_final_2.to_dict("list")
-    src1.data=source_dict
-    global df
-    df= df_final_2
-
-
-
-
-
-
-uvfits_input=FileInput(accept=".uvfits", multiple=True)
-uvfits_input.on_change('value', process_uvfits_data)
-uvfitsp=Paragraph(text="Use this button to choose uvfits files")
-
-
-bokCol=bokeh.models.Column(uvfitsp,uvfits_input)
-
+btn = Button(label='Write selected points to CSV', button_type='success')
+btn.on_click(print_datapoints)
 # Selection layouts.
 select_x1 = Select(plt1, 'x', opts_all)
 select_y1 = Select(plt1, 'y', opts_all)
 
-inputs1 = bm.Column(bokCol,savebutton, select_x1, select_y1)
+inputs1 = bm.Column(btn, select_x1, select_y1)
 select_y2 = Select(plt2, 'y', opts_all)
 scatter = bl.row(inputs1, fig, select_y2, fig2)
 select_x3 = Select(plt3, 'x', opts_all)
 select_y3 = Select(plt3, 'y', opts_all)
-inputs3 = bm.Column(savebutton, select_x3, select_y3)
+inputs3 = bm.Column(btn, select_x3, select_y3)
 timeseries = bl.row(inputs3, fig3,)
 
 myMessage = 'Enter an equation'
@@ -328,6 +230,28 @@ figtemp = bp.figure(title="temp graph",
 figtemp.circle(x="D", y="Iamp(Jy)", color="colors",
                         source=src1, size=6)
 
+# Equation editor
+
+
+def my_text_input_handler(attr, old, new):
+    myMessage = "you just entered: {0}".format(new)
+    text_output.text = myMessage  # this changes the browser display
+    df = df_final
+    try:
+        df = pd.eval("D={}".format(new), target=df)
+
+        print(df["D"], "assign")
+    # Example:pd.eval("D = ,df['U(lambda)']**2 + df['V(lambda)']**2 target=df_1)
+        src1.data["D"] = df["D"]
+
+        return src1
+    except:
+        print('error')
+
+
+text_input = TextInput(
+    value="default", title="Enter a pd.eval compatible equation (with df as the dataframe): Ex: (df['U(lambda)']**2 + df['V(lambda)']**2)**0.5")
+text_input.on_change("value", my_text_input_handler)
 
 
 layout = bokeh.layouts.column(text_input, text_output, figtemp)
@@ -336,8 +260,5 @@ layout = bokeh.layouts.column(text_input, text_output, figtemp)
 all = bl.column(Tabs({"Visibility and domain": scatter,
                       "Custom plot w/ Default axes": timeseries, "Equation editor": layout},
                      width=1024))
-
-
-
 bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo 2"

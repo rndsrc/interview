@@ -23,14 +23,14 @@ and [install Docker](https://docs.docker.com/install/) on your platform
 
 In the top level of this repository, execute the command
 ```
-docker build --tag interview:bokehapp .
+docker build --tag interview:interviewdocker .
 ```
 
 ### Running
 
 Execute the command to start the Docker container:
 ```
-docker run --rm -p 5006:5006 -it interview:bokehapp
+docker run --rm -p 5006:5006 -it interview:interviewdocker
 Go to dockerhub cli or use docker exec (docker exec -t -i interview:bokehapp /bin/bash)
 cd interview
 cd apps

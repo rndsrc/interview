@@ -8,7 +8,6 @@
 import sys
 import pandas as pd
 import numpy  as np
-
 import bokeh.layouts        as bl
 import bokeh.models         as bm
 import bokeh.colors         as bc
@@ -18,6 +17,7 @@ import bokeh.plotting       as bp
 import interview.widget as iw
 
 from eat.io import hops, util
+from bokeh.models.widgets.buttons import ButtonClick
 
 #------------------------------------------------------------------------------
 # Get a list of files from the arguments
@@ -31,6 +31,10 @@ print('Inspecting file{} "{}"'.format('s' if len(files) > 1 else '', files))
 #------------------------------------------------------------------------------
 # Read an alist file; rename columns; add new columns
 df = hops.read_alist(files[0])
+
+
+
+df["Custom"] = np.nan
 
 
 df['r']     = np.sqrt(df.u**2 + df.v**2)
@@ -51,42 +55,9 @@ opts_time = {
     "datetime"     : "Time",
     "gmst"         : "GMST",
 }
-
-opts_all = {
-    "datetime"     : "Time",
-    "gmst"         : "GMST",
-
-    "r"            : "r",
-    "u"            : "u",
-    "v"            : "v",
-    "ref_elev"     : "Reference (Site 1) Elevation",
-    "rem_elev"     : "Remainder (Site 2) Elevation",
-    "ref_az"       : "Reference (Site 1) Azimuth",
-    "rem_az"       : "Remainder (Site 2) Azimuth",
-
-    "amp"          : "Amplitude",
-    "resid_phas"   : "Residual Phase",
-    "total_phas"   : "Total Phase",
-    "snr"          : "Signal-to-Noise Ratio",
-    "quality"      : "Quality",
-
-    "delay_rate"   : "Delay Rate",
-    "total_rate"   : "Total Delay Rate",
-    "sbdelay"      : "Single-Band Delay",
-    "resid_delay"  : "Single-Band Residual Delay",
-    "total_sbresid": "Total Single-Band Residual Delay",
-    "mbdelay"      : "Multi-Band Delay",
-    "total_mbdelay": "Total Multi-Band Delay",
-    "ambiguity"    : "Ambiguity",
-
-    # Unused columns:
-    # "baseline", "datatype", "dec_deg", "duration", "epoch", "esdesp",
-    # "expt_no", "extent_no", "freq_code", "lags", "length",
-    # "noloss_cotime", "offset", "phase_snr", "polarization", "procdate",
-    # "ra_hrs", "ref_freq", "root_id", "scan_id", "scan_offset", "site1",
-    # "site2" "source", "srch_cotime", "timetag", "two", "version",
-    # "year",
-}
+opts_all =dict()
+for header in df.columns:
+    opts_all[header]=header
 
 # Create hover tool with some useful information; use it for a Bokeh
 # figure; create a scatter plot
@@ -113,7 +84,7 @@ select_x = iw.Select(plt, 'x', opts_time)
 select_y = iw.Select(plt, 'y', opts_all)
 
 # Layout widgets;
-inputs     = bl.widgetbox(select_x, select_y, sizing_mode="fixed")
+inputs     = bm.Column(select_x, select_y, sizing_mode="scale_both")
 timeseries = bl.column(fig, inputs)
 
 #------------------------------------------------------------------------------
@@ -131,7 +102,7 @@ select_x = iw.Select(plt, 'x', opts_all)
 select_y = iw.Select(plt, 'y', opts_all)
 
 # Layout widgets;
-inputs  = bl.widgetbox(select_x, select_y, sizing_mode="fixed")
+inputs  = bm.Column(select_x, select_y, sizing_mode="scale_both")
 scatter = bl.row(inputs, fig)
 
 #------------------------------------------------------------------------------
@@ -158,7 +129,7 @@ select_x2  = iw.Select(plt2, 'x', opts_all)
 select_y12 = iw.Select([plt1, plt2], 'y', opts_all)
 
 # Layout widgets;
-inputs  = bl.widgetbox(select_x1, select_x2, select_y12, sizing_mode="fixed")
+inputs  = bm.Column(select_x1, select_x2, select_y12, sizing_mode="scale_both")
 hlinked = bl.row(inputs, bl.gridplot([[fig1, fig2]]))
 
 #------------------------------------------------------------------------------
@@ -185,7 +156,7 @@ select_y1  = iw.Select(plt1, 'y', opts_all)
 select_y2  = iw.Select(plt2, 'y', opts_all)
 
 # Layout widgets;
-inputs  = bl.widgetbox(select_x12, select_y1, select_y2, sizing_mode="fixed")
+inputs  = bm.Column(select_x12, select_y1, select_y2, sizing_mode="scale_both")
 vlinked = bl.row(inputs, bl.gridplot([[fig1], [fig2]]))
 
 #------------------------------------------------------------------------------
@@ -199,6 +170,35 @@ global_cb  = bw.CheckboxButtonGroup(labels=["Auto-correlation"]+pols,
                                     active=last)
 colored_by = bw.RadioButtonGroup(labels=cols,
                                  active=0)
+index_list="datetime,version,root_id,two,extent_no,duration,length,offset,expt_no,scan_id,procdate,year,timetag,scan_offset,source,baseline,quality,freq_code,polarization,lags,amp,snr,resid_phas,phase_snr,datatype,sbdelay,mbdelay,ambiguity,delay_rate,ref_elev,rem_elev,ref_az,rem_az,u,v,esdesp,epoch,ref_freq,total_phas,total_rate,total_mbdelay,total_sbresid,srch_cotime,noloss_cotime,ra_hrs,dec_deg,resid_delay,Custom,r,site1,site2".split(",")
+btn = bw.Button(label="Save as CSV", button_type="success")
+btn.js_on_event(ButtonClick, bm.CustomJS(
+    args=dict(source_data=src,index_list=index_list),
+    code="""
+        var inds = source_data.selected.indices;
+        var data = source_data.data;
+        var out = '';
+        out+=index_list;
+        out+=',color\\n';
+        for (var i = 0; i < inds.length; i++) {
+            var j;
+                for (j = 0; j < index_list.length; j++) {
+                    out+=data[index_list[j]][inds[i]]+',';
+                }
+            out+=data['color'][inds[i]]+'\\n';
+        }
+        var file = new Blob([out], {type: 'text/plain'});
+        var elem = window.document.createElement('a');
+        elem.href = window.URL.createObjectURL(file);
+        elem.download = 'selected-data.csv';
+        document.body.appendChild(elem);
+        elem.click();
+        document.body.removeChild(elem);
+        """
+        )
+                         )
+                        
+
 
 def update():
     global last
@@ -242,18 +242,39 @@ def update():
         df2 = df2.append(df1[df1.polarization == pol])
 
     src.data = src.from_df(df2)
+def my_text_input_handler(attr, old, new,df=df):
+    myMessage = "you just entered: {0}".format(new)  # this changes the browser display
+    try:
+        df_2 = pd.eval("Custom={}".format(new), target=df)
+        df_2 = df_2[df_2.u != 0]
+        print(df_2["Custom"], "assign")
+    # Example:pd.eval("D = ,df['U(lambda)']**2 + df['V(lambda)']**2 target=df_1)
+        src.data["Custom"] = df_2["Custom"]
+
+        return src
+
+    except:
+        print('error')
+
+text_input = bw.TextInput(
+    value="default", title="Enter a pd.eval compatible equation (with df as the dataframe): Ex: (df['u']**2 + df['v']**2)**0.5")
+text_input.on_change("value", my_text_input_handler)
+
 
 global_cb.on_change("active", lambda attr, old, new: update())
 colored_by.on_change("active", lambda attr, old, new: update())
 update() # update once to populate the bokeh column data source
 
 # Add everything to the root
-all = bl.column(bl.widgetbox(global_cb, colored_by),
+
+
+all = bl.column(bm.Column(global_cb, colored_by,btn,text_input),
                 iw.Tabs({"Time Series":           timeseries,
                          "Scatter Plot":          scatter,
                          "Horizontal Linked View":hlinked,
                          "Vertical Linked View":  vlinked},
                         width=1024))
+
 
 bp.curdoc().add_root(all)
 bp.curdoc().title = "Demo"
